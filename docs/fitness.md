@@ -79,3 +79,4 @@ zero hazards, and initcheck on the population evaluator test reported zero error
 
 This is a straightforward baseline using ordinary kernels and fixed six-turn launch loops. It does not compact
 active games, use persistent kernels, cache fitness across generations, or implement breeding/selection.
+See [Nsight profiling](profiling.md) for captured timeline and hardware-counter measurements.

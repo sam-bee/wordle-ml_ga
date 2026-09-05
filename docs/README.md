@@ -7,6 +7,7 @@ and build/test commands. Repository-wide development and version-control guidanc
 - [Genotype slab](genotype-slab.md): fixed-width allocator, reference ownership, and breeding integration.
 - [Word data](word-data.md): vocabulary ordering, solution splits, and import provenance.
 - [Fitness evaluation](fitness.md): training games, ranking, bounded memory, and GPU verification.
+- [Nsight profiling](profiling.md): reproducible captures, tool access, and measured fitness bottlenecks.
 
 Reference projects relative to the repository root:
 

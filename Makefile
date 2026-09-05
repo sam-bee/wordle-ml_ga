@@ -1,9 +1,23 @@
 .DEFAULT_GOAL := help
 
 .PHONY: help env docker-build configure build test test-gpu test-gpu-sanitized smoke inference slab-smoke fitness \
-	format clean rebuild agents-rebuild build-and-test shell
+	profile-fitness-systems profile-fitness-compute format clean rebuild agents-rebuild build-and-test shell
 
 CUDA_RUN := docker compose run --rm --no-deps -T cuda-dev
+PROFILE_HOST_UID := $(shell id -u)
+PROFILE_HOST_GID := $(shell id -g)
+PROFILE_SYSTEMS_DIR := profiling/nsight-systems
+PROFILE_COMPUTE_DIR := profiling/nsight-compute
+
+# Mount the complete host Nsight Systems version directory. The short-lived
+# container gets only a /tmp symlink to the mounted target binary.
+NSYS_HOST_DIR ?= $(shell nsys_binary=$$(readlink -f "$$(command -v nsys)" 2>/dev/null); test -n "$$nsys_binary" && dirname "$$(dirname "$$nsys_binary")")
+NSYS_CONTAINER_ROOT := /opt/wordle-ga-nsys
+NSYS_CONTAINER_BINARY := /tmp/wordle-ga-nsys
+NSYS_RUN := docker compose run --rm --no-deps -T \
+	-v "$(NSYS_HOST_DIR):$(NSYS_CONTAINER_ROOT):ro" cuda-dev
+NCU_RUN := docker compose run --rm --no-deps -T --user root --cap-add SYS_ADMIN \
+	-e WORDLE_GA_PROFILE_UID=$(PROFILE_HOST_UID) -e WORDLE_GA_PROFILE_GID=$(PROFILE_HOST_GID) cuda-dev
 
 help:
 	@echo "Wordle GA development commands (builds and tests run in Docker):"
@@ -16,6 +30,8 @@ help:
 	@echo "  make inference           Run CUDA policy inference against saved reference cases"
 	@echo "  make slab-smoke          Allocate and check the default 1,792-slot genotype slab"
 	@echo "  make fitness             Evaluate the saved model on all 2,109 training answers"
+	@echo "  make profile-fitness-systems  Capture fitness with Nsight Systems"
+	@echo "  make profile-fitness-compute  Capture PolicyLogits with Nsight Compute"
 	@echo "  make test-gpu-sanitized   Run the GPU tests under compute-sanitizer"
 	@echo "  make format              Format C++ and CUDA sources"
 	@echo "  make clean               Remove the generated build directory"
@@ -62,6 +78,35 @@ slab-smoke: build
 
 fitness: build
 	$(CUDA_RUN) ./build/fitness_test --full-training
+
+profile-fitness-systems: build
+	test -x "$(NSYS_HOST_DIR)/target-linux-x64/nsys" || { echo "host nsys target not found; install Nsight Systems or set NSYS_HOST_DIR" >&2; exit 127; }
+	mkdir -p $(PROFILE_SYSTEMS_DIR)
+	$(NSYS_RUN) sh -c \
+		'ln -sf $(NSYS_CONTAINER_ROOT)/target-linux-x64/nsys $(NSYS_CONTAINER_BINARY) && \
+		$(NSYS_CONTAINER_BINARY) profile --trace=cuda,nvtx,osrt --sample=none --cpuctxsw=none \
+			--force-overwrite=true -o /workspace/$(PROFILE_SYSTEMS_DIR)/fitness \
+			/workspace/build/fitness_test --full-training && \
+		$(NSYS_CONTAINER_BINARY) stats --force-export=true --force-overwrite=true --format=csv \
+			--output=/workspace/$(PROFILE_SYSTEMS_DIR)/fitness-summary \
+			--report=cuda_api_sum,cuda_gpu_kern_sum,cuda_gpu_mem_time_sum,cuda_gpu_trace \
+			/workspace/$(PROFILE_SYSTEMS_DIR)/fitness.nsys-rep'
+
+profile-fitness-compute: build
+	mkdir -p $(PROFILE_COMPUTE_DIR)
+	$(NCU_RUN) sh -c \
+		'ncu --set full --kernel-name regex:PolicyLogits --launch-skip 2 --launch-count 1 \
+			--force-overwrite --export /workspace/$(PROFILE_COMPUTE_DIR)/policy-logits \
+			/workspace/build/fitness_test --full-training; \
+		status=$$?; \
+		find /workspace/$(PROFILE_COMPUTE_DIR) -maxdepth 1 -type f \
+			-exec chown "$$WORDLE_GA_PROFILE_UID:$$WORDLE_GA_PROFILE_GID" {} +; \
+		exit $$status'
+	$(CUDA_RUN) sh -c \
+		'ncu --import /workspace/$(PROFILE_COMPUTE_DIR)/policy-logits.ncu-rep --page details --csv \
+			> /workspace/$(PROFILE_COMPUTE_DIR)/policy-logits-summary.csv && \
+		ncu --import /workspace/$(PROFILE_COMPUTE_DIR)/policy-logits.ncu-rep --page details \
+			> /workspace/$(PROFILE_COMPUTE_DIR)/policy-logits-summary.txt'
 
 format: docker-build
 	$(CUDA_RUN) sh -c 'find src tests -type f \( -name "*.hpp" -o -name "*.cpp" -o -name "*.cu" -o -name "*.cuh" \) -exec clang-format -i {} +'
