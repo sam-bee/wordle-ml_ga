@@ -5,6 +5,7 @@ and build/test commands. Repository-wide development and version-control guidanc
 
 - [CUDA inference](inference.md): model architecture, device-memory API, and verification.
 - [Genotype slab](genotype-slab.md): fixed-width allocator, reference ownership, and breeding integration.
+- [Word data](word-data.md): vocabulary ordering, solution splits, and import provenance.
 
 Reference projects relative to the repository root:
 

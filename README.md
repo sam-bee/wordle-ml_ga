@@ -8,6 +8,7 @@ The development setup follows the earlier `neuroevolution-wordle` project. The p
 `wordle-ml_machine-learning`. Its trained weights and saved outputs are included as regression fixtures; using those
 weights to seed evolution remains a separate decision. See [CUDA inference](docs/inference.md) for the API and scope.
 The [genotype slab](docs/genotype-slab.md) provides GPU allocation and reference-counted reclamation for breeding.
+The [word data](docs/word-data.md) includes the model's fixed vocabularies and the original solution splits.
 
 ## Setup
 
@@ -63,6 +64,6 @@ Run the Make wrappers from the host.
 - `src/model/`: the CUDA policy and its fixed parameter layout.
 - `src/genotype_slab/`: fixed-width GPU slots and reference-counted reclamation.
 - `tests/cuda/`, `tests/fixtures/`: GPU tests and saved model/reference fixtures.
-- `data/`: reserved for word data.
+- `data/`: fixed action/solution vocabularies, train/validation/test solution lists, and checksums.
 - `checkpoints/`, `models/`, `telemetry/`, `profiling/`: reserved output directories; generated contents are ignored.
 - `docs/`: project documentation.
