@@ -1,0 +1,29 @@
+name: wordle-ga
+
+services:
+  cuda-dev:
+    image: wordle-ga:cuda13.1
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        DOCKERCOMPOSE_UID: ${DOCKERCOMPOSE_UID:-1001}
+        DOCKERCOMPOSE_GID: ${DOCKERCOMPOSE_GID:-1001}
+    working_dir: /workspace
+    volumes:
+      - type: bind
+        source: .
+        target: /workspace
+    environment:
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${NVIDIA_GPU_DEVICE_ID:?Set NVIDIA_GPU_DEVICE_ID in .env to the RTX 5070 Ti or RTX 5050 UUID}"]
+              capabilities: [gpu]
+    init: true
+    stdin_open: true
+    tty: true
+    command: ["sleep", "infinity"]

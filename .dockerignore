@@ -1,0 +1,9 @@
+.git
+.codex
+.env
+build
+data
+checkpoints
+models
+profiling
+telemetry
