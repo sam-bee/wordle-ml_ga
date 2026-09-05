@@ -14,6 +14,11 @@ The largest logit wins, with ties resolved by the lowest canonical action ID. Gr
 yellow matches, so duplicate letters follow Wordle rules. Correct guesses end the game immediately; the sixth
 incorrect guess ends it as a loss. Completed games skip subsequent encoding, inference, and advancement.
 
+The initial board is identical for every target. Each evaluation selects the opening action once per population
+entry, then applies that action's feedback separately to every training answer. The cache holds only 1,024 action
+IDs (4 KiB), indexed by population position, and is recomputed on every evaluation so changed weights or population
+order cannot reuse stale actions. Opening selection and ordinary turns share the same CUDA argmax and feedback code.
+
 Each device `Result` contains games, wins, total charged guesses, wins on each of turns 1–6, invalid games, and a
 higher-is-better integer score:
 
@@ -29,7 +34,7 @@ score of zero. `invalid_games` makes this distinguishable from an ordinary zero-
 ## Bounded memory and ownership
 
 `Create` uploads words and ID mappings, computes an immutable byte feedback table on the GPU, and allocates scratch
-for a fixed number of concurrent games. Default batch capacity is 256; persistent device memory totals 26,566,587
+for a fixed number of concurrent games. Default batch capacity is 256; persistent device memory totals 26,570,683
 bytes (25.34 MiB), including the 10,942,351-byte feedback table. Genotypes stay in the caller's slab and results use
 44 bytes per organism. Scratch does not grow with population size and is reused between batches and evaluations.
 
@@ -64,19 +69,27 @@ changed ordering or training membership is rejected. Pass the returned vocabular
 
 `make fitness` evaluates the existing trained regression fixture on all training answers and reports CUDA event
 time excluding setup and weight upload. It is a smoke benchmark, not a decision to initialize evolution from those
-weights. A first RTX 5070 Ti run won 2,101 of 2,109 games, charged 7,696 guesses, and reported zero invalid games in
-53.7 ms. This is one model's training-set result, not a measurement of a full population or held-out performance.
+weights. The saved model wins 2,101 of 2,109 games, charges 7,696 guesses, and reports zero invalid games. Its score
+is 22,162,104 and its wins on turns 1–6 are `[1, 59, 862, 988, 155, 36]`. The test requires every field to match exactly.
+
+`make fitness-benchmark` uses 16 distinct genotype slots containing that same fixture, excludes one warmup, and
+reports minimum, median, and maximum CUDA event time over five repetitions. Set `FITNESS_POPULATION=1024` and
+`FITNESS_REPETITIONS=3` to measure a full population. Setup, weight upload, result copies, and checks are outside
+timing. This measures fitness for that model's game lengths; evolving populations may take longer when they lose
+more games. See [profiling results](profiling.md) for measured timings and before/after comparisons.
 
 `make test` includes golden single/batched inference, saved-input encoding checks, repeated-letter feedback,
 repeat suppression, probe selection, completed-game handling, and population evaluation with exact expected scores.
 The population tests cover different weights, repeated/permuted slot IDs, batch boundaries, batch-size invariance,
-and scratch reuse. Temporary data copies verify that only the three training vocabulary files are required and
+and scratch reuse, including recomputing openings after population permutation or live weight changes between
+evaluations. Temporary data copies verify that only the three training vocabulary files are required and
 that changed files are rejected. `make test-gpu-sanitized` adds memory checks.
 
-The initial clean container rebuild passed all seven GPU tests on the RTX 5070 Ti. Compute Sanitizer memcheck
-reported zero errors for the full suite; separate racecheck runs on the gameplay and batched-policy tests reported
-zero hazards, and initcheck on the population evaluator test reported zero errors.
+The optimized implementation passed a clean container rebuild and all eight GPU tests on the RTX 5070 Ti.
+Compute Sanitizer memcheck reported zero errors across the suite, including full-training evaluation. Targeted
+racecheck runs on batched inference and gameplay reported zero hazards; initcheck on population evaluation
+reported zero errors.
 
-This is a straightforward baseline using ordinary kernels and fixed six-turn launch loops. It does not compact
+This implementation uses ordinary kernels and a fixed five-turn launch loop after applying the opening. It does not compact
 active games, use persistent kernels, cache fitness across generations, or implement breeding/selection.
 See [Nsight profiling](profiling.md) for captured timeline and hardware-counter measurements.

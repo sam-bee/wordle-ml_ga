@@ -59,9 +59,19 @@ cudaError_t BuildFeedback(const Word *actions, const Word *solutions, std::uint8
 cudaError_t StartGames(Tables tables, genotype_slab::DeviceView slab, const genotype_slab::Slot *population_slots,
                        std::uint64_t first_pair, int count, Game *games, int *active, const float **parameters,
                        cudaStream_t stream);
+// One opening game per population position, with the same input for every target.
+cudaError_t StartOpeningGames(Tables tables, genotype_slab::DeviceView slab,
+                              const genotype_slab::Slot *population_slots, int first_organism, int count, Game *games,
+                              int *active, const float **parameters, cudaStream_t stream);
 cudaError_t EncodeGames(Tables tables, const Game *games, const int *active, int count, model::Input *inputs,
                         cudaStream_t stream);
 cudaError_t AdvanceGames(Tables tables, Game *games, int *active, int count, const float *logits, cudaStream_t stream);
+// Opening games must have distinct organism indices. Cache entries use those
+// population indices; -1 means an invalid opening. Recompute each evaluation.
+cudaError_t SelectOpeningActions(const Game *games, const int *active, int count, const float *logits,
+                                 int *opening_actions, cudaStream_t stream);
+cudaError_t ApplyOpeningActions(Tables tables, Game *games, int *active, int count, const int *opening_actions,
+                                cudaStream_t stream);
 cudaError_t AccumulateGames(const Game *games, int count, Result *results, cudaStream_t stream);
 cudaError_t FinishResults(Result *results, int population_count, cudaStream_t stream);
 

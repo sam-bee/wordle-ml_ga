@@ -36,11 +36,7 @@ void Check(cudaError_t status, const char *operation) {
     }
 }
 
-__global__ void AllocateBiasGenome(slab::DeviceView view, const int *actions, slab::Slot *slot) {
-    if (threadIdx.x == 0)
-        *slot = slab::Allocate(view);
-    __syncthreads();
-    const slab::Slot selected = *slot;
+__device__ void InitializeBiasGenomeWeights(slab::DeviceView view, const int *actions, slab::Slot selected) {
     float *weights = slab::Parameters(view, selected);
     if (weights == nullptr)
         return;
@@ -51,6 +47,17 @@ __global__ void AllocateBiasGenome(slab::DeviceView view, const int *actions, sl
         for (int rank = 0; rank < 6; ++rank)
             weights[model::weights::kLogitsBias + actions[rank]] = static_cast<float>(600.0 - rank);
     }
+}
+
+__global__ void AllocateBiasGenome(slab::DeviceView view, const int *actions, slab::Slot *slot) {
+    if (threadIdx.x == 0)
+        *slot = slab::Allocate(view);
+    __syncthreads();
+    InitializeBiasGenomeWeights(view, actions, *slot);
+}
+
+__global__ void ResetBiasGenome(slab::DeviceView view, const int *actions, slab::Slot slot) {
+    InitializeBiasGenomeWeights(view, actions, slot);
 }
 
 std::array<int, 6> TrainingActions(const fitness::Vocabulary &vocabulary) {
@@ -151,6 +158,37 @@ void RuntimeRegression(const fitness::Vocabulary &vocabulary) {
     CheckResult(results[1], true);
     CheckResult(results[2], true);
 
+    const std::array<slab::Slot, 3> permuted_population{{population[0], population[1], population[0]}};
+    Check(cudaMemcpyAsync(device_population, permuted_population.data(), sizeof(permuted_population),
+                          cudaMemcpyHostToDevice, stream),
+          "copy permuted population");
+    Check(evaluator.Evaluate(genotypes.view(), device_population, 3, device_results, stream), "permuted Evaluate");
+    Check(cudaStreamSynchronize(stream), "permuted Evaluate synchronize");
+    CopyResults(device_results, results, stream);
+    CheckResult(results[0], true);
+    CheckResult(results[1], false);
+    CheckResult(results[2], true);
+
+    Check(cudaMemcpyAsync(device_actions, training_actions.data(), 6 * sizeof(int), cudaMemcpyHostToDevice, stream),
+          "copy mutation actions");
+    ResetBiasGenome<<<1, 256, 0, stream>>>(genotypes.view(), device_actions, population[1]);
+    Check(cudaGetLastError(), "mutation genome launch");
+    Check(cudaMemcpyAsync(device_population, ordered_population.data(), sizeof(ordered_population),
+                          cudaMemcpyHostToDevice, stream),
+          "restore original population");
+    Check(evaluator.Evaluate(genotypes.view(), device_population, 3, device_results, stream), "mutated Evaluate");
+    Check(cudaStreamSynchronize(stream), "mutated Evaluate synchronize");
+    CopyResults(device_results, results, stream);
+    CheckResult(results[0], true);
+    CheckResult(results[1], true);
+    CheckResult(results[2], true);
+
+    Check(cudaMemcpyAsync(device_actions, probe_actions.data(), 6 * sizeof(int), cudaMemcpyHostToDevice, stream),
+          "restore probe actions");
+    ResetBiasGenome<<<1, 256, 0, stream>>>(genotypes.view(), device_actions, population[1]);
+    Check(cudaGetLastError(), "restore probe genome launch");
+    Check(cudaStreamSynchronize(stream), "restore probe genome synchronize");
+
     const slab::Slot invalid = slab::kInvalidSlot;
     Check(cudaMemcpyAsync(device_population + 1, &invalid, sizeof(invalid), cudaMemcpyHostToDevice, stream),
           "copy invalid population slot");
@@ -163,6 +201,14 @@ void RuntimeRegression(const fitness::Vocabulary &vocabulary) {
                           cudaMemcpyHostToDevice, stream),
           "restore population");
     Check(evaluator.Destroy(), "first evaluator Destroy");
+    Check(evaluator.Create(vocabulary, 2, stream), "partial-chunk evaluator Create");
+    Check(evaluator.Evaluate(genotypes.view(), device_population, 3, device_results, stream), "partial-chunk Evaluate");
+    Check(cudaStreamSynchronize(stream), "partial-chunk Evaluate synchronize");
+    CopyResults(device_results, results, stream);
+    CheckResult(results[0], false);
+    CheckResult(results[1], true);
+    CheckResult(results[2], true);
+    Check(evaluator.Destroy(), "partial-chunk evaluator Destroy");
     Check(evaluator.Create(vocabulary, 512, stream), "second evaluator Create");
     Check(evaluator.Evaluate(genotypes.view(), device_population, 3, device_results, stream),
           "batch-invariance Evaluate");

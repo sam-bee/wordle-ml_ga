@@ -18,41 +18,52 @@ __global__ void BuildFeedbackKernel(const Word *actions, const Word *solutions, 
     out[index] = Feedback(actions[action], solutions[solution]);
 }
 
-__global__ void StartKernel(Tables t, genotype_slab::DeviceView slab, const genotype_slab::Slot *slots,
-                            std::uint64_t first, int count, Game *games, int *active, const float **parameters) {
-    const int i = blockIdx.x;
-    if (i >= count)
-        return;
-    const std::uint64_t pair = first + static_cast<std::uint64_t>(i);
-    Game &g = games[i];
+__device__ void InitializeGame(genotype_slab::DeviceView slab, const genotype_slab::Slot *slots, int organism,
+                               std::uint16_t target, Game &g, int &active, const float *&parameters) {
     if (threadIdx.x == 0) {
-        parameters[i] = nullptr;
-        g.organism = static_cast<int>(pair / kTrainingSolutions);
+        parameters = nullptr;
+        g.organism = organism;
         g.guesses = 0;
         g.won = 0;
         g.invalid = 0;
-        g.target = 0;
+        g.target = target;
     }
     for (int c = threadIdx.x; c < model::kNumSolutions; c += blockDim.x)
         g.candidates[c] = 1;
     for (int h = threadIdx.x; h < model::kNumTurns; h += blockDim.x)
         g.history[h] = 0;
     if (threadIdx.x == 0) {
-        g.target = t.training_solutions[pair % kTrainingSolutions];
-        const genotype_slab::Slot slot = slots[g.organism];
+        const genotype_slab::Slot slot = slots[organism];
         bool ok = g.target < model::kNumSolutions && slot < slab.capacity && slab.references != nullptr &&
                   slab.genotypes != nullptr;
         if (ok)
             ok = atomicAdd(slab.references + slot, 0u) != 0;
         if (ok)
-            parameters[i] = genotype_slab::Parameters(slab, slot);
+            parameters = genotype_slab::Parameters(slab, slot);
         if (!ok) {
             g.invalid = 1;
-            active[i] = 0;
-            parameters[i] = nullptr;
+            active = 0;
         } else
-            active[i] = 1;
+            active = 1;
     }
+}
+
+__global__ void StartKernel(Tables t, genotype_slab::DeviceView slab, const genotype_slab::Slot *slots,
+                            std::uint64_t first, int count, Game *games, int *active, const float **parameters) {
+    const int i = blockIdx.x;
+    if (i >= count)
+        return;
+    const std::uint64_t pair = first + static_cast<std::uint64_t>(i);
+    InitializeGame(slab, slots, static_cast<int>(pair / kTrainingSolutions),
+                   t.training_solutions[pair % kTrainingSolutions], games[i], active[i], parameters[i]);
+}
+
+__global__ void StartOpeningKernel(Tables t, genotype_slab::DeviceView slab, const genotype_slab::Slot *slots,
+                                   int first, int count, Game *games, int *active, const float **parameters) {
+    const int i = blockIdx.x;
+    if (i >= count)
+        return;
+    InitializeGame(slab, slots, first + i, t.training_solutions[0], games[i], active[i], parameters[i]);
 }
 
 __global__ void EncodeKernel(Tables t, const Game *games, const int *active, int count, model::Input *inputs) {
@@ -112,15 +123,7 @@ __global__ void EncodeKernel(Tables t, const Game *games, const int *active, int
     }
 }
 
-__global__ void AdvanceKernel(Tables t, Game *games, int *active, int count, const float *logits) {
-    const int i = blockIdx.x;
-    if (i >= count || active[i] == 0)
-        return;
-    Game &g = games[i];
-    const float *row = logits + static_cast<std::size_t>(i) * model::kNumActions;
-    __shared__ int best_id[128];
-    __shared__ float best_value[128];
-    __shared__ int bad;
+__device__ void SelectAction(const Game &g, const float *row, int *best_id, float *best_value, int &bad) {
     if (threadIdx.x == 0)
         bad = 0;
     __syncthreads();
@@ -156,17 +159,20 @@ __global__ void AdvanceKernel(Tables t, Game *games, int *active, int count, con
         }
         __syncthreads();
     }
+}
+
+__device__ void ApplyAction(Tables t, Game &g, int &active, int action) {
     if (threadIdx.x == 0) {
-        if (bad || best_id[0] < 0 || g.guesses >= model::kNumTurns) {
+        if (action < 0 || action >= model::kNumActions || g.guesses >= model::kNumTurns) {
             g.invalid = 1;
-            active[i] = 0;
+            active = 0;
         } else
-            g.history[g.guesses] = static_cast<std::uint16_t>(best_id[0]);
+            g.history[g.guesses] = static_cast<std::uint16_t>(action);
     }
     __syncthreads();
-    if (active[i] == 0)
+    if (active == 0)
         return;
-    const int best = g.history[g.guesses];
+    const int best = action;
     const std::uint8_t mark = t.feedback[static_cast<std::size_t>(best) * model::kNumSolutions + g.target];
     if (mark != 242)
         for (int s = threadIdx.x; s < model::kNumSolutions; s += blockDim.x)
@@ -177,10 +183,49 @@ __global__ void AdvanceKernel(Tables t, Game *games, int *active, int count, con
         ++g.guesses;
         if (mark == 242) {
             g.won = 1;
-            active[i] = 0;
+            active = 0;
         } else if (g.guesses >= model::kNumTurns)
-            active[i] = 0;
+            active = 0;
     }
+}
+
+__global__ void AdvanceKernel(Tables t, Game *games, int *active, int count, const float *logits) {
+    const int i = blockIdx.x;
+    if (i >= count || active[i] == 0)
+        return;
+    __shared__ int best_id[128];
+    __shared__ float best_value[128];
+    __shared__ int bad;
+    SelectAction(games[i], logits + static_cast<std::size_t>(i) * model::kNumActions, best_id, best_value, bad);
+    int action = best_id[0];
+    if (bad)
+        action = -1;
+    ApplyAction(t, games[i], active[i], action);
+}
+
+__global__ void SelectOpeningKernel(const Game *games, const int *active, int count, const float *logits,
+                                    int *opening_actions) {
+    const int i = blockIdx.x;
+    if (i >= count)
+        return;
+    __shared__ int best_id[128];
+    __shared__ float best_value[128];
+    __shared__ int bad;
+    if (active[i] == 0) {
+        if (threadIdx.x == 0)
+            opening_actions[games[i].organism] = -1;
+        return;
+    }
+    SelectAction(games[i], logits + static_cast<std::size_t>(i) * model::kNumActions, best_id, best_value, bad);
+    if (threadIdx.x == 0)
+        opening_actions[games[i].organism] = bad ? -1 : best_id[0];
+}
+
+__global__ void ApplyOpeningKernel(Tables t, Game *games, int *active, int count, const int *opening_actions) {
+    const int i = blockIdx.x;
+    if (i >= count || active[i] == 0)
+        return;
+    ApplyAction(t, games[i], active[i], opening_actions[games[i].organism]);
 }
 
 __global__ void AccumulateKernel(const Game *games, int count, Result *results) {
@@ -223,6 +268,16 @@ cudaError_t StartGames(Tables t, genotype_slab::DeviceView slab, const genotype_
     StartKernel<<<count, 128, 0, stream>>>(t, slab, slots, first, count, g, a, p);
     return cudaGetLastError();
 }
+cudaError_t StartOpeningGames(Tables t, genotype_slab::DeviceView slab, const genotype_slab::Slot *slots, int first,
+                              int count, Game *g, int *a, const float **p, cudaStream_t stream) {
+    if (count < 0 || count > 65535 || first < 0 || first > kMaxPopulation || count > kMaxPopulation - first ||
+        !t.training_solutions || !slots || !g || !a || !p)
+        return cudaErrorInvalidValue;
+    if (!count)
+        return cudaSuccess;
+    StartOpeningKernel<<<count, 128, 0, stream>>>(t, slab, slots, first, count, g, a, p);
+    return cudaGetLastError();
+}
 cudaError_t EncodeGames(Tables t, const Game *g, const int *a, int count, model::Input *in, cudaStream_t stream) {
     if (count < 0 || count > 65535 || !t.solutions || !t.solution_actions || !g || !in)
         return cudaErrorInvalidValue;
@@ -237,6 +292,23 @@ cudaError_t AdvanceGames(Tables t, Game *g, int *a, int count, const float *l, c
     if (!count)
         return cudaSuccess;
     AdvanceKernel<<<count, 128, 0, stream>>>(t, g, a, count, l);
+    return cudaGetLastError();
+}
+cudaError_t SelectOpeningActions(const Game *g, const int *a, int count, const float *l, int *opening_actions,
+                                 cudaStream_t stream) {
+    if (count < 0 || count > 65535 || !g || !a || !l || !opening_actions)
+        return cudaErrorInvalidValue;
+    if (!count)
+        return cudaSuccess;
+    SelectOpeningKernel<<<count, 128, 0, stream>>>(g, a, count, l, opening_actions);
+    return cudaGetLastError();
+}
+cudaError_t ApplyOpeningActions(Tables t, Game *g, int *a, int count, const int *opening_actions, cudaStream_t stream) {
+    if (count < 0 || count > 65535 || !g || !a || !opening_actions || !t.feedback)
+        return cudaErrorInvalidValue;
+    if (!count)
+        return cudaSuccess;
+    ApplyOpeningKernel<<<count, 128, 0, stream>>>(t, g, a, count, opening_actions);
     return cudaGetLastError();
 }
 cudaError_t AccumulateGames(const Game *g, int count, Result *r, cudaStream_t stream) {

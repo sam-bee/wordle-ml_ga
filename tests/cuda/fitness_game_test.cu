@@ -64,6 +64,17 @@ __global__ void AllocateOne(gs::DeviceView slab, gs::Slot *out) {
         out[0] = gs::Allocate(slab);
 }
 
+__global__ void AllocateSlots(gs::DeviceView slab, gs::Slot *out, int count) {
+    const int i = static_cast<int>(blockIdx.x * blockDim.x + threadIdx.x);
+    if (i < count)
+        out[i] = gs::Allocate(slab);
+}
+
+__global__ void ReleaseOne(gs::DeviceView slab, gs::Slot slot) {
+    if (threadIdx.x == 0)
+        gs::Release(slab, slot);
+}
+
 void EncodeGolden(const f::Vocabulary &v) {
     const auto values = Floats("golden-vectors.f32le", kGoldenValueCount);
     constexpr int n = static_cast<int>(std::size(kGoldenCases));
@@ -187,6 +198,7 @@ void AdvanceTests(const f::Vocabulary &v) {
     CheckCuda(f::AdvanceGames(t, g, active, 1, logits, gStream), "NaN advance");
     CheckCuda(cudaStreamSynchronize(gStream), "NaN sync");
     Copy(g, &base, sizeof(base), cudaMemcpyDeviceToHost);
+    CheckCuda(cudaStreamSynchronize(gStream), "NaN copy");
     Require(base.invalid == 1, "nonfinite invalid failed");
     base = {};
     row.assign(m::kNumActions, 0);
@@ -279,6 +291,167 @@ void StartTest(const f::Vocabulary &v) {
     cudaFree(ds);
     CheckCuda(slab.Destroy(), "slab destroy");
 }
+
+void OpeningTests(const f::Vocabulary &v) {
+    gs::Slab slab;
+    CheckCuda(slab.Create(4), "opening slab");
+    gs::Slot *ds = nullptr;
+    CheckCuda(cudaMalloc(&ds, 4 * sizeof(gs::Slot)), "opening slots");
+    AllocateSlots<<<1, 4, 0, gStream>>>(slab.view(), ds, 4);
+    CheckCuda(cudaGetLastError(), "opening slot allocation");
+    CheckCuda(cudaStreamSynchronize(gStream), "opening slot allocation sync");
+
+    f::Word *actions = nullptr, *solutions = nullptr;
+    std::uint16_t *training = nullptr, *solution_actions = nullptr;
+    std::uint8_t *feedback = nullptr;
+    CheckCuda(cudaMalloc(&actions, sizeof(v.actions)), "opening actions");
+    CheckCuda(cudaMalloc(&solutions, sizeof(v.solutions)), "opening solutions");
+    CheckCuda(cudaMalloc(&training, sizeof(v.training_solutions)), "opening training");
+    CheckCuda(cudaMalloc(&solution_actions, sizeof(v.solution_actions)), "opening solution map");
+    CheckCuda(cudaMalloc(&feedback, std::size_t(m::kNumActions) * m::kNumSolutions), "opening feedback");
+    Copy(v.actions.data(), actions, sizeof(v.actions), cudaMemcpyHostToDevice);
+    Copy(v.solutions.data(), solutions, sizeof(v.solutions), cudaMemcpyHostToDevice);
+    Copy(v.training_solutions.data(), training, sizeof(v.training_solutions), cudaMemcpyHostToDevice);
+    Copy(v.solution_actions.data(), solution_actions, sizeof(v.solution_actions), cudaMemcpyHostToDevice);
+    CheckCuda(f::BuildFeedback(actions, solutions, feedback, gStream), "opening feedback");
+    CheckCuda(cudaStreamSynchronize(gStream), "opening feedback sync");
+    const f::Tables tables{actions, solutions, solution_actions, training, feedback};
+
+    constexpr int count = 3;
+    f::Game *ordinary = nullptr, *cached = nullptr;
+    int *ordinary_active = nullptr, *cached_active = nullptr, *opening_actions = nullptr;
+    const float **parameters = nullptr;
+    float *logits = nullptr;
+    CheckCuda(cudaMalloc(&ordinary, count * sizeof(f::Game)), "ordinary games");
+    CheckCuda(cudaMalloc(&cached, count * sizeof(f::Game)), "cached games");
+    CheckCuda(cudaMalloc(&ordinary_active, count * sizeof(int)), "ordinary active");
+    CheckCuda(cudaMalloc(&cached_active, count * sizeof(int)), "cached active");
+    CheckCuda(cudaMalloc(&parameters, count * sizeof(float *)), "opening parameters");
+    CheckCuda(cudaMalloc(&opening_actions, f::kMaxPopulation * sizeof(int)), "opening cache");
+    CheckCuda(cudaMalloc(&logits, std::size_t(count) * m::kNumActions * sizeof(float)), "opening logits");
+
+    std::array<gs::Slot, 4> slots{};
+    Copy(ds, slots.data(), sizeof(slots), cudaMemcpyDeviceToHost);
+    CheckCuda(cudaStreamSynchronize(gStream), "opening slots copy");
+    // Organisms 1, 2, and 3 exercise a nonzero chunk.  Organism 2 points at a
+    // genuinely dead slot, which must make only its game inactive.
+    ReleaseOne<<<1, 1, 0, gStream>>>(slab.view(), slots[2]);
+    CheckCuda(cudaGetLastError(), "release opening slot");
+    CheckCuda(cudaStreamSynchronize(gStream), "release opening slot sync");
+    Copy(slots.data(), ds, sizeof(slots), cudaMemcpyHostToDevice);
+
+    CheckCuda(f::StartOpeningGames(tables, slab.view(), ds, 1, count, ordinary, ordinary_active, parameters, gStream),
+              "start opening games");
+    Copy(ordinary, cached, count * sizeof(f::Game), cudaMemcpyDeviceToDevice);
+    Copy(ordinary_active, cached_active, count * sizeof(int), cudaMemcpyDeviceToDevice);
+    std::vector<float> host_logits(std::size_t(count) * m::kNumActions, 0.0f);
+    const int low = Action(v, "AARGH");
+    const int high = Action(v, "ABASE");
+    host_logits[low] = 10.0f;
+    host_logits[m::kNumActions + high] = 10.0f;
+    host_logits[2 * m::kNumActions + low] = NAN;
+    host_logits[m::kNumActions + high + 1] = NAN;
+    Copy(host_logits.data(), logits, host_logits.size() * sizeof(float), cudaMemcpyHostToDevice);
+    std::array<int, f::kMaxPopulation> poisoned{};
+    poisoned.fill(-77);
+    Copy(poisoned.data(), opening_actions, sizeof(poisoned), cudaMemcpyHostToDevice);
+    CheckCuda(f::AdvanceGames(tables, ordinary, ordinary_active, count, logits, gStream), "ordinary opening advance");
+    CheckCuda(f::SelectOpeningActions(cached, cached_active, count, logits, opening_actions, gStream),
+              "select opening actions");
+    CheckCuda(f::ApplyOpeningActions(tables, cached, cached_active, count, opening_actions, gStream),
+              "apply opening actions");
+    std::array<f::Game, count> ordinary_host{}, cached_host{};
+    std::array<int, count> ordinary_active_host{}, cached_active_host{};
+    std::array<int, f::kMaxPopulation> opening_host{};
+    Copy(ordinary, ordinary_host.data(), sizeof(ordinary_host), cudaMemcpyDeviceToHost);
+    Copy(cached, cached_host.data(), sizeof(cached_host), cudaMemcpyDeviceToHost);
+    Copy(ordinary_active, ordinary_active_host.data(), sizeof(ordinary_active_host), cudaMemcpyDeviceToHost);
+    Copy(cached_active, cached_active_host.data(), sizeof(cached_active_host), cudaMemcpyDeviceToHost);
+    Copy(opening_actions, opening_host.data(), sizeof(opening_host), cudaMemcpyDeviceToHost);
+    CheckCuda(cudaStreamSynchronize(gStream), "opening results sync");
+    for (int i = 0; i < count; ++i) {
+        Require(std::memcmp(&ordinary_host[i], &cached_host[i], sizeof(f::Game)) == 0,
+                "opening action differs from ordinary advance");
+        Require(ordinary_active_host[i] == cached_active_host[i], "opening active differs from ordinary advance");
+    }
+    Require(opening_host[1] == low && opening_host[2] == -1 && opening_host[3] == -1,
+            "opening cache organism mapping or invalid poison failed");
+    Require(ordinary_host[0].guesses == 1 && ordinary_host[0].history[0] == low,
+            "nonzero opening organism did not advance");
+    Require(ordinary_host[1].invalid == 1 && ordinary_active_host[1] == 0, "dead opening slot was not invalidated");
+    Require(ordinary_host[0].candidates[v.training_solutions[0]] == 1 &&
+                ordinary_host[0].candidates[Solution(v, "EERIE")] == 0,
+            "opening candidate filtering failed");
+
+    // Equal finite logits use the same low-ID tie rule as ordinary advancement.
+    slots[2] = slots[0];
+    Copy(slots.data(), ds, sizeof(slots), cudaMemcpyHostToDevice);
+    CheckCuda(f::StartOpeningGames(tables, slab.view(), ds, 2, 1, cached, cached_active, parameters, gStream),
+              "start tie opening game");
+    std::array<float, m::kNumActions> tie_logits{};
+    tie_logits[low] = 10.0f;
+    tie_logits[high] = 10.0f;
+    Copy(tie_logits.data(), logits, tie_logits.size() * sizeof(float), cudaMemcpyHostToDevice);
+    CheckCuda(f::SelectOpeningActions(cached, cached_active, 1, logits, opening_actions, gStream),
+              "select tie opening action");
+    int tie_cache = -77;
+    Copy(opening_actions + 2, &tie_cache, sizeof(tie_cache), cudaMemcpyDeviceToHost);
+    CheckCuda(cudaStreamSynchronize(gStream), "tie opening result sync");
+    Require(tie_cache == std::min(low, high), "opening tie selection failed");
+
+    // Non-finite logits on active games must also produce -1.
+    for (const float bad : {NAN, INFINITY}) {
+        CheckCuda(f::StartOpeningGames(tables, slab.view(), ds, 2, 1, cached, cached_active, parameters, gStream),
+                  "start nonfinite opening game");
+        std::array<float, m::kNumActions> bad_logits{};
+        bad_logits[low] = bad;
+        Copy(bad_logits.data(), logits, bad_logits.size() * sizeof(float), cudaMemcpyHostToDevice);
+        CheckCuda(f::SelectOpeningActions(cached, cached_active, 1, logits, opening_actions, gStream),
+                  "select nonfinite opening action");
+        int bad_cache = -77;
+        Copy(opening_actions + 2, &bad_cache, sizeof(bad_cache), cudaMemcpyDeviceToHost);
+        CheckCuda(cudaStreamSynchronize(gStream), "nonfinite opening result sync");
+        Require(bad_cache == -1, "nonfinite opening logits were accepted");
+    }
+
+    // Check first-guess wins through the cached path with a fresh nonzero game.
+    CheckCuda(f::StartOpeningGames(tables, slab.view(), ds, 2, 1, cached, cached_active, parameters, gStream),
+              "start winning opening game");
+    std::array<float, m::kNumActions> winning_logits{};
+    std::fill(winning_logits.begin(), winning_logits.end(), -1.0f);
+    std::array<f::Game, 1> winning_game{};
+    Copy(cached, winning_game.data(), sizeof(winning_game), cudaMemcpyDeviceToHost);
+    CheckCuda(cudaStreamSynchronize(gStream), "winning opening start sync");
+    const int winning_action = v.solution_actions[winning_game[0].target];
+    winning_logits[winning_action] = 10.0f;
+    Copy(winning_logits.data(), logits, winning_logits.size() * sizeof(float), cudaMemcpyHostToDevice);
+    poisoned.fill(-77);
+    Copy(poisoned.data(), opening_actions, sizeof(poisoned), cudaMemcpyHostToDevice);
+    CheckCuda(f::SelectOpeningActions(cached, cached_active, 1, logits, opening_actions, gStream),
+              "select winning opening action");
+    CheckCuda(f::ApplyOpeningActions(tables, cached, cached_active, 1, opening_actions, gStream),
+              "apply winning opening action");
+    Copy(cached, winning_game.data(), sizeof(winning_game), cudaMemcpyDeviceToHost);
+    Copy(cached_active, ordinary_active_host.data(), sizeof(int), cudaMemcpyDeviceToHost);
+    CheckCuda(cudaStreamSynchronize(gStream), "winning opening result sync");
+    Require(winning_game[0].won == 1 && winning_game[0].guesses == 1 && ordinary_active_host[0] == 0,
+            "cached first-guess win failed");
+
+    cudaFree(logits);
+    cudaFree(opening_actions);
+    cudaFree(parameters);
+    cudaFree(cached_active);
+    cudaFree(ordinary_active);
+    cudaFree(cached);
+    cudaFree(ordinary);
+    cudaFree(feedback);
+    cudaFree(solution_actions);
+    cudaFree(training);
+    cudaFree(solutions);
+    cudaFree(actions);
+    cudaFree(ds);
+    CheckCuda(slab.Destroy(), "opening slab destroy");
+}
 } // namespace
 
 int main() {
@@ -288,6 +461,7 @@ int main() {
     EncodeGolden(v);
     AdvanceTests(v);
     StartTest(v);
+    OpeningTests(v);
     CheckCuda(cudaStreamDestroy(gStream), "stream destroy");
     std::puts("CUDA fitness game primitives passed");
 }

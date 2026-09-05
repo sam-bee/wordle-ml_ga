@@ -77,6 +77,8 @@ target_compile_definitions(fitness_test PRIVATE
 target_compile_options(fitness_test PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Wall,-Wextra>)
 add_test(NAME fitness_test COMMAND fitness_test)
 set_tests_properties(fitness_test PROPERTIES LABELS gpu TIMEOUT 60)
+add_test(NAME fitness_training_test COMMAND fitness_test --full-training)
+set_tests_properties(fitness_training_test PROPERTIES LABELS gpu TIMEOUT 60)
 
 add_executable(fitness_runtime_test tests/cuda/fitness_runtime_test.cu)
 target_link_libraries(fitness_runtime_test PRIVATE wordle_fitness)

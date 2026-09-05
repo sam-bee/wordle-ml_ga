@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help env docker-build configure build test test-gpu test-gpu-sanitized smoke inference slab-smoke fitness \
+.PHONY: help env docker-build configure build test test-gpu test-gpu-sanitized smoke inference slab-smoke fitness fitness-benchmark \
 	profile-fitness-systems profile-fitness-compute format clean rebuild agents-rebuild build-and-test shell
 
 CUDA_RUN := docker compose run --rm --no-deps -T cuda-dev
@@ -8,6 +8,8 @@ PROFILE_HOST_UID := $(shell id -u)
 PROFILE_HOST_GID := $(shell id -g)
 PROFILE_SYSTEMS_DIR := profiling/nsight-systems
 PROFILE_COMPUTE_DIR := profiling/nsight-compute
+FITNESS_POPULATION ?= 16
+FITNESS_REPETITIONS ?= 5
 
 # Mount the complete host Nsight Systems version directory. The short-lived
 # container gets only a /tmp symlink to the mounted target binary.
@@ -30,6 +32,7 @@ help:
 	@echo "  make inference           Run CUDA policy inference against saved reference cases"
 	@echo "  make slab-smoke          Allocate and check the default 1,792-slot genotype slab"
 	@echo "  make fitness             Evaluate the saved model on all 2,109 training answers"
+	@echo "  make fitness-benchmark   Repeat fitness with distinct genotype slots (default population 16)"
 	@echo "  make profile-fitness-systems  Capture fitness with Nsight Systems"
 	@echo "  make profile-fitness-compute  Capture PolicyLogits with Nsight Compute"
 	@echo "  make test-gpu-sanitized   Run the GPU tests under compute-sanitizer"
@@ -64,6 +67,7 @@ test-gpu-sanitized: build
 	$(CUDA_RUN) compute-sanitizer --tool memcheck --error-exitcode=1 ./build/genotype_slab_test
 	$(CUDA_RUN) compute-sanitizer --tool memcheck --error-exitcode=1 ./build/policy_batch_test
 	$(CUDA_RUN) compute-sanitizer --tool memcheck --error-exitcode=1 ./build/fitness_test
+	$(CUDA_RUN) compute-sanitizer --tool memcheck --error-exitcode=1 ./build/fitness_test --full-training
 	$(CUDA_RUN) compute-sanitizer --tool memcheck --error-exitcode=1 ./build/fitness_game_test
 	$(CUDA_RUN) compute-sanitizer --tool memcheck --error-exitcode=1 ./build/fitness_runtime_test
 
@@ -78,6 +82,9 @@ slab-smoke: build
 
 fitness: build
 	$(CUDA_RUN) ./build/fitness_test --full-training
+
+fitness-benchmark: build
+	$(CUDA_RUN) ./build/fitness_test --benchmark $(FITNESS_POPULATION) $(FITNESS_REPETITIONS)
 
 profile-fitness-systems: build
 	test -x "$(NSYS_HOST_DIR)/target-linux-x64/nsys" || { echo "host nsys target not found; install Nsight Systems or set NSYS_HOST_DIR" >&2; exit 127; }

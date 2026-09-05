@@ -50,15 +50,17 @@ Enqueue weight and input updates on the same stream, or establish dependencies w
 In particular, a non-blocking stream must not rely on implicit ordering with work on the default stream.
 
 Reuse weights and scratch across successive calls on the same stream. Concurrent calls may share read-only weights
-and inputs but require separate workspaces and outputs. Scratch needs no initialization. The future fitness
-evaluator can produce inputs and consume logits in device memory without a host round trip.
+and inputs but require separate workspaces and outputs. Scratch needs no initialization. The fitness
+evaluator produces inputs and consumes logits in device memory without a host round trip.
 
 `ForwardBatch` takes a device array of weight pointers, contiguous input/workspace arrays, and a contiguous
 `count * 4739` output array. Count must be 1 through 65,535. An optional device `int` activity array skips cases whose
 entry is zero; those cases leave scratch/output untouched and may have null weight pointers. Active cases must
 have valid inputs and live, immutable weights. The same stream/lifetime contract applies as for `Forward`.
 
-The implementation uses one 128-thread block per dense output row and FP32 arithmetic. The
+The implementation uses 128-thread blocks and FP32 arithmetic. Dense layers assign one output row to each warp;
+the logit layer handles 64 rows per block, sharing the 160-value hidden vector. Dot products use warp reductions,
+with no cross-warp synchronization in the dense layers. The
 [fitness evaluator](fitness.md) supplies candidate filtering, statistics, action selection, and game scoring.
 No CPU inference implementation or general model-file loader is included.
 
@@ -72,10 +74,11 @@ pointer rejection. The test uses a non-default CUDA stream and persistent device
 `make test` includes this test and the GPU smoke test. `make test-gpu-sanitized` runs both under Compute Sanitizer.
 Fixture checksums are verified during CMake configuration. See [fixture provenance](../tests/fixtures/policy/README.md).
 
-The initial implementation passed on the RTX 5070 Ti (compute capability 12.0): all 151,648 reference logits were
-within tolerance, with maximum absolute error `7.62939453e-06`. The clean rebuild and both CTest tests passed;
-Compute Sanitizer memcheck reported zero errors. A separate racecheck run of `policy_test` reported zero hazards,
-errors, or warnings.
+The optimized implementation passed on the RTX 5070 Ti (compute capability 12.0): all 151,648 reference logits were
+within tolerance, with maximum absolute error `7.62939453e-06`. Warp reductions change FP32 addition order, so
+bitwise agreement with the original reductions is not required. The full-training regression also checks exact game
+scores and the six-turn win histogram. The clean rebuild passed all eight CTest tests; Compute Sanitizer memcheck
+reported zero errors for the suite, including full-training evaluation.
 
 Host-side test code loads saved arrays, manages CUDA resources, and compares results. It does not recalculate the
 network. The trained checkpoint is test evidence, not a choice of initial population for the GA.

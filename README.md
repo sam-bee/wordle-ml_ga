@@ -48,6 +48,7 @@ make test-gpu            # Alias for the current GPU-only test suite
 make inference           # Run CUDA inference on the saved reference cases
 make slab-smoke          # Allocate and check the default ~7 GiB slab on the GPU
 make fitness             # Play all training answers with the saved model and report GPU time
+make fitness-benchmark   # Warm up and repeat with 16 distinct genotype slots
 make profile-fitness-systems # Capture an Nsight Systems timeline
 make profile-fitness-compute # Capture Nsight Compute counters for the logit kernel
 make test-gpu-sanitized  # Check the GPU tests with compute-sanitizer

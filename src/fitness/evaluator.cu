@@ -21,6 +21,7 @@ struct Evaluator::Storage {
     model::Input *inputs = nullptr;
     model::Workspace *workspaces = nullptr;
     float *logits = nullptr;
+    int *opening_actions = nullptr;
     int batch_capacity = 0;
     std::size_t bytes = 0;
 };
@@ -63,6 +64,7 @@ cudaError_t Evaluator::Create(const Vocabulary &vocabulary, int batch_capacity, 
         return cudaErrorMemoryAllocation;
     const auto cleanup = [&pending]() {
         cudaFree(pending->logits);
+        cudaFree(pending->opening_actions);
         cudaFree(pending->workspaces);
         cudaFree(pending->inputs);
         cudaFree(const_cast<float **>(pending->parameters));
@@ -99,6 +101,8 @@ cudaError_t Evaluator::Create(const Vocabulary &vocabulary, int batch_capacity, 
         error = Allocate(&pending->workspaces, batch_capacity);
     if (error == cudaSuccess)
         error = Allocate(&pending->logits, static_cast<std::size_t>(batch_capacity) * model::kNumActions);
+    if (error == cudaSuccess)
+        error = Allocate(&pending->opening_actions, kMaxPopulation);
     if (error != cudaSuccess) {
         cleanup();
         return error;
@@ -132,6 +136,7 @@ cudaError_t Evaluator::Create(const Vocabulary &vocabulary, int batch_capacity, 
                      static_cast<std::size_t>(batch_capacity) *
                          (sizeof(Game) + sizeof(int) + sizeof(float *) + sizeof(model::Input) +
                           sizeof(model::Workspace) + static_cast<std::size_t>(model::kNumActions) * sizeof(float));
+    pending->bytes += static_cast<std::size_t>(kMaxPopulation) * sizeof(int);
     storage_ = pending;
     return cudaSuccess;
 }
@@ -149,6 +154,7 @@ cudaError_t Evaluator::Destroy() {
             first = error;
     };
     free_one(old->logits);
+    free_one(old->opening_actions);
     free_one(old->workspaces);
     free_one(old->inputs);
     free_one(const_cast<float **>(old->parameters));
@@ -178,12 +184,31 @@ cudaError_t Evaluator::Evaluate(genotype_slab::DeviceView slab, const genotype_s
         return error;
     const Tables tables{s.actions, s.solutions, s.solution_actions, s.training_solutions, s.feedback};
     const std::uint64_t total = static_cast<std::uint64_t>(population_count) * kTrainingSolutions;
+    for (int first = 0; first < population_count; first += s.batch_capacity) {
+        const int count = std::min(s.batch_capacity, population_count - first);
+        error =
+            StartOpeningGames(tables, slab, population_slots, first, count, s.games, s.active, s.parameters, stream);
+        if (error != cudaSuccess)
+            return error;
+        error = EncodeGames(tables, s.games, s.active, count, s.inputs, stream);
+        if (error != cudaSuccess)
+            return error;
+        error = model::ForwardBatch(s.parameters, s.inputs, s.workspaces, s.logits, count, s.active, stream);
+        if (error != cudaSuccess)
+            return error;
+        error = SelectOpeningActions(s.games, s.active, count, s.logits, s.opening_actions, stream);
+        if (error != cudaSuccess)
+            return error;
+    }
     for (std::uint64_t first = 0; first < total; first += s.batch_capacity) {
         const int count = static_cast<int>(std::min<std::uint64_t>(s.batch_capacity, total - first));
         error = StartGames(tables, slab, population_slots, first, count, s.games, s.active, s.parameters, stream);
         if (error != cudaSuccess)
             return error;
-        for (int turn = 0; turn < model::kNumTurns; ++turn) {
+        error = ApplyOpeningActions(tables, s.games, s.active, count, s.opening_actions, stream);
+        if (error != cudaSuccess)
+            return error;
+        for (int turn = 1; turn < model::kNumTurns; ++turn) {
             error = EncodeGames(tables, s.games, s.active, count, s.inputs, stream);
             if (error != cudaSuccess)
                 return error;
