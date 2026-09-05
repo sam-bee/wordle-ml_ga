@@ -13,6 +13,10 @@ the reference for scaffolding and overall goals. The machine-learning repository
 its trained checkpoint may be useful, but adopting it remains a separate decision. Algorithmic design and software
 architecture will differ from the original GA. Do not assume its implementation choices carry over automatically.
 
+Current decisions: FP32 genotypes, a 32x32 toroidal population (1,024 organisms), and a shared slab with 1,792 slots.
+Genotype width is fixed permanently: no action-space augmentation, resizing, repacking, or compaction. Keep CUDA simple.
+Reclaim genotype slots by counting remaining uses; see `docs/genotype-slab.md` for the allocation/ownership contract.
+
 ## Version Control
 
 There must be no merge commits. Use rebase pulls and fast-forward merges to keep history linear.
@@ -81,3 +85,7 @@ copying, without changing those projects.
 Be direct when a proposed design is a bad idea, and explain why. The user knows genetic algorithms well and benefits
 from concrete guidance on neural-network and CUDA design. Keep responses concise, take work step by step, and leave
 room for discussion before making decisions outside the requested scope.
+
+The user prefers liberal use of Luna subagents to reduce project costs. Delegate bounded implementation, testing,
+and review tasks to `gpt-5.6-luna`, with a clear specification and separate file ownership. The primary agent owns
+integration and validation. Coordinate shared-worktree formatting/builds, and do not delegate commits or pushes.

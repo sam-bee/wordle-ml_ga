@@ -38,3 +38,14 @@ target_compile_definitions(policy_test PRIVATE POLICY_FIXTURE_DIR="${POLICY_FIXT
 target_compile_options(policy_test PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Wall,-Wextra>)
 add_test(NAME policy_test COMMAND policy_test)
 set_tests_properties(policy_test PROPERTIES LABELS gpu TIMEOUT 30)
+
+add_library(genotype_slab STATIC src/genotype_slab/slab.cu)
+target_include_directories(genotype_slab PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(genotype_slab PUBLIC CUDA::cudart)
+target_compile_options(genotype_slab PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Wall,-Wextra>)
+
+add_executable(genotype_slab_test tests/cuda/genotype_slab_test.cu)
+target_link_libraries(genotype_slab_test PRIVATE genotype_slab)
+target_compile_options(genotype_slab_test PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Wall,-Wextra>)
+add_test(NAME genotype_slab_test COMMAND genotype_slab_test)
+set_tests_properties(genotype_slab_test PROPERTIES LABELS gpu TIMEOUT 30)

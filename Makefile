@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help env docker-build configure build test test-gpu test-gpu-sanitized smoke inference \
+.PHONY: help env docker-build configure build test test-gpu test-gpu-sanitized smoke inference slab-smoke \
 	format clean rebuild agents-rebuild build-and-test shell
 
 CUDA_RUN := docker compose run --rm --no-deps -T cuda-dev
@@ -14,6 +14,7 @@ help:
 	@echo "  make test                Build and run the GPU tests with CTest"
 	@echo "  make smoke               Build and print the GPU smoke result"
 	@echo "  make inference           Run CUDA policy inference against saved reference cases"
+	@echo "  make slab-smoke          Allocate and check the default 1,792-slot genotype slab"
 	@echo "  make test-gpu-sanitized   Run the GPU tests under compute-sanitizer"
 	@echo "  make format              Format C++ and CUDA sources"
 	@echo "  make clean               Remove the generated build directory"
@@ -43,6 +44,7 @@ test-gpu: test
 test-gpu-sanitized: build
 	$(CUDA_RUN) compute-sanitizer --tool memcheck --error-exitcode=1 ./build/gpu_smoke_test
 	$(CUDA_RUN) compute-sanitizer --tool memcheck --error-exitcode=1 ./build/policy_test
+	$(CUDA_RUN) compute-sanitizer --tool memcheck --error-exitcode=1 ./build/genotype_slab_test
 
 smoke: build
 	$(CUDA_RUN) ./build/gpu_smoke_test
@@ -50,8 +52,11 @@ smoke: build
 inference: build
 	$(CUDA_RUN) ./build/policy_test
 
+slab-smoke: build
+	$(CUDA_RUN) ./build/genotype_slab_test --full-size-smoke
+
 format: docker-build
-	$(CUDA_RUN) sh -c 'find src tests -type f \( -name "*.hpp" -o -name "*.cpp" -o -name "*.cu" \) -exec clang-format -i {} +'
+	$(CUDA_RUN) sh -c 'find src tests -type f \( -name "*.hpp" -o -name "*.cpp" -o -name "*.cu" -o -name "*.cuh" \) -exec clang-format -i {} +'
 
 clean:
 	rm -rf build
