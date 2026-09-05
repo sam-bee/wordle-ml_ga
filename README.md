@@ -1,14 +1,15 @@
 # Neuroevolutionary Wordle
 
 A CUDA/C++ project to breed neural agents that play Wordle. This repository contains development scaffolding,
-a GPU smoke test, a minimal CUDA policy forward pass, and a fixed-width genotype slab allocator. Gameplay and the
-breeding algorithm are not implemented yet.
+a GPU smoke test, CUDA policy inference, a fixed-width genotype slab allocator, and a CUDA gameplay fitness evaluator.
+The breeding algorithm is not implemented yet.
 
 The development setup follows the earlier `neuroevolution-wordle` project. The policy architecture comes from
 `wordle-ml_machine-learning`. Its trained weights and saved outputs are included as regression fixtures; using those
 weights to seed evolution remains a separate decision. See [CUDA inference](docs/inference.md) for the API and scope.
 The [genotype slab](docs/genotype-slab.md) provides GPU allocation and reference-counted reclamation for breeding.
 The [word data](docs/word-data.md) includes the model's fixed vocabularies and the original solution splits.
+The [fitness evaluator](docs/fitness.md) plays all 2,109 training answers using bounded GPU batches.
 
 ## Setup
 
@@ -46,6 +47,7 @@ make test                # Build and run CTest, including the GPU smoke test
 make test-gpu            # Alias for the current GPU-only test suite
 make inference           # Run CUDA inference on the saved reference cases
 make slab-smoke          # Allocate and check the default ~7 GiB slab on the GPU
+make fitness             # Play all training answers with the saved model and report GPU time
 make test-gpu-sanitized  # Check the GPU tests with compute-sanitizer
 make format              # Apply .clang-format to C++/CUDA sources
 make clean               # Remove build/
@@ -63,6 +65,7 @@ Run the Make wrappers from the host.
 - `CMakeLists.txt`, `Makefile`, `.clang-format`: build, test, and formatting commands.
 - `src/model/`: the CUDA policy and its fixed parameter layout.
 - `src/genotype_slab/`: fixed-width GPU slots and reference-counted reclamation.
+- `src/fitness/`: frozen vocabulary loading, CUDA gameplay, and population fitness evaluation.
 - `tests/cuda/`, `tests/fixtures/`: GPU tests and saved model/reference fixtures.
 - `data/`: fixed action/solution vocabularies, train/validation/test solution lists, and checksums.
 - `checkpoints/`, `models/`, `telemetry/`, `profiling/`: reserved output directories; generated contents are ignored.

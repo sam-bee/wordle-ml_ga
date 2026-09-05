@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help env docker-build configure build test test-gpu test-gpu-sanitized smoke inference slab-smoke \
+.PHONY: help env docker-build configure build test test-gpu test-gpu-sanitized smoke inference slab-smoke fitness \
 	format clean rebuild agents-rebuild build-and-test shell
 
 CUDA_RUN := docker compose run --rm --no-deps -T cuda-dev
@@ -15,6 +15,7 @@ help:
 	@echo "  make smoke               Build and print the GPU smoke result"
 	@echo "  make inference           Run CUDA policy inference against saved reference cases"
 	@echo "  make slab-smoke          Allocate and check the default 1,792-slot genotype slab"
+	@echo "  make fitness             Evaluate the saved model on all 2,109 training answers"
 	@echo "  make test-gpu-sanitized   Run the GPU tests under compute-sanitizer"
 	@echo "  make format              Format C++ and CUDA sources"
 	@echo "  make clean               Remove the generated build directory"
@@ -45,6 +46,10 @@ test-gpu-sanitized: build
 	$(CUDA_RUN) compute-sanitizer --tool memcheck --error-exitcode=1 ./build/gpu_smoke_test
 	$(CUDA_RUN) compute-sanitizer --tool memcheck --error-exitcode=1 ./build/policy_test
 	$(CUDA_RUN) compute-sanitizer --tool memcheck --error-exitcode=1 ./build/genotype_slab_test
+	$(CUDA_RUN) compute-sanitizer --tool memcheck --error-exitcode=1 ./build/policy_batch_test
+	$(CUDA_RUN) compute-sanitizer --tool memcheck --error-exitcode=1 ./build/fitness_test
+	$(CUDA_RUN) compute-sanitizer --tool memcheck --error-exitcode=1 ./build/fitness_game_test
+	$(CUDA_RUN) compute-sanitizer --tool memcheck --error-exitcode=1 ./build/fitness_runtime_test
 
 smoke: build
 	$(CUDA_RUN) ./build/gpu_smoke_test
@@ -54,6 +59,9 @@ inference: build
 
 slab-smoke: build
 	$(CUDA_RUN) ./build/genotype_slab_test --full-size-smoke
+
+fitness: build
+	$(CUDA_RUN) ./build/fitness_test --full-training
 
 format: docker-build
 	$(CUDA_RUN) sh -c 'find src tests -type f \( -name "*.hpp" -o -name "*.cpp" -o -name "*.cu" -o -name "*.cuh" \) -exec clang-format -i {} +'

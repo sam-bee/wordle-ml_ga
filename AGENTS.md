@@ -16,6 +16,8 @@ architecture will differ from the original GA. Do not assume its implementation 
 Current decisions: FP32 genotypes, a 32x32 toroidal population (1,024 organisms), and a shared slab with 1,792 slots.
 Genotype width is fixed permanently: no action-space augmentation, resizing, repacking, or compaction. Keep CUDA simple.
 Reclaim genotype slots by counting remaining uses; see `docs/genotype-slab.md` for the allocation/ownership contract.
+Fitness plays all 2,109 training answers, using the full 2,309-solution candidate vocabulary and 4,739 actions.
+Validation and final-test targets stay out of evolutionary fitness. See `docs/fitness.md` for scoring and GPU APIs.
 
 ## Version Control
 

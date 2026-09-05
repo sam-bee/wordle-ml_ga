@@ -6,10 +6,11 @@ and build/test commands. Repository-wide development and version-control guidanc
 - [CUDA inference](inference.md): model architecture, device-memory API, and verification.
 - [Genotype slab](genotype-slab.md): fixed-width allocator, reference ownership, and breeding integration.
 - [Word data](word-data.md): vocabulary ordering, solution splits, and import provenance.
+- [Fitness evaluation](fitness.md): training games, ranking, bounded memory, and GPU verification.
 
 Reference projects relative to the repository root:
 
 - `../../../../../ai/neuroevolution-wordle/codebase/`: original CUDA/C++ scaffolding and neuroevolution experiment.
 - `../../talks/wordle/wordle-ml_machine-learning/`: candidate-based policy architecture, trained model, and CUDA inference.
 
-The evolutionary algorithm, fitness evaluator, and use of the trained checkpoint to seed evolution remain to be decided.
+The evolutionary algorithm and use of the trained checkpoint to seed evolution remain to be decided.

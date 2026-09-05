@@ -55,4 +55,6 @@ Checking holdout membership and identity does not score agents against it.
 These lists supply the word data needed for gameplay and fitness evaluation. The backprop project's WDIT imitation
 records contain teacher demonstrations for supervised learning and are not part of this import. Trained weights
 already exist under `tests/fixtures/policy/` for inference regression checks; using them to seed evolution remains
-undecided. Word loading, GPU encoding, and gameplay integration remain subsequent work.
+undecided. The [fitness evaluator](fitness.md) now loads the three action/all-solution/training files, encodes game
+states on the GPU, and plays complete training games. CMake checks their frozen hashes, and the runtime loader
+compares their bytes with the build's frozen copies. It does not open validation or final-test files.

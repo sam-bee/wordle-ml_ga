@@ -60,4 +60,10 @@ struct Workspace {
 cudaError_t Forward(const float *device_weights, const Input *device_input, Workspace *device_workspace,
                     float *device_logits, cudaStream_t stream = nullptr);
 
+// parameters is a device array of count device weight pointers. Inputs, workspaces, and logits are contiguous
+// device arrays, with one object or kNumActions entries per case. If active is non-null, it is a device array of
+// count flags; zero cases are left completely untouched. count must be in [1, 65535].
+cudaError_t ForwardBatch(const float *const *parameters, const Input *inputs, Workspace *workspaces, float *logits,
+                         int count, const int *active = nullptr, cudaStream_t stream = nullptr);
+
 } // namespace wordle_ga::model

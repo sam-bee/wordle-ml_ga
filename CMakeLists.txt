@@ -49,3 +49,49 @@ target_link_libraries(genotype_slab_test PRIVATE genotype_slab)
 target_compile_options(genotype_slab_test PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Wall,-Wextra>)
 add_test(NAME genotype_slab_test COMMAND genotype_slab_test)
 set_tests_properties(genotype_slab_test PROPERTIES LABELS gpu TIMEOUT 30)
+
+include(cmake/word_data.cmake)
+add_library(wordle_fitness STATIC src/fitness/vocabulary.cpp src/fitness/game.cu src/fitness/evaluator.cu)
+target_include_directories(wordle_fitness PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+target_link_libraries(wordle_fitness PUBLIC wordle_policy genotype_slab)
+target_compile_options(wordle_fitness PRIVATE
+    $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Wall,-Wextra>
+    $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra>
+)
+
+add_executable(policy_batch_test tests/cuda/policy_batch_test.cu)
+target_link_libraries(policy_batch_test PRIVATE wordle_policy)
+target_include_directories(policy_batch_test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+target_compile_definitions(policy_batch_test PRIVATE POLICY_FIXTURE_DIR="${POLICY_FIXTURE_DIR}")
+target_compile_options(policy_batch_test PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Wall,-Wextra>)
+add_test(NAME policy_batch_test COMMAND policy_batch_test)
+set_tests_properties(policy_batch_test PROPERTIES LABELS gpu TIMEOUT 30)
+
+add_executable(fitness_test tests/cuda/fitness_test.cu)
+target_link_libraries(fitness_test PRIVATE wordle_fitness)
+target_include_directories(fitness_test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+target_compile_definitions(fitness_test PRIVATE
+    POLICY_FIXTURE_DIR="${POLICY_FIXTURE_DIR}"
+    WORD_DATA_DIR="${WORD_DATA_DIR}"
+)
+target_compile_options(fitness_test PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Wall,-Wextra>)
+add_test(NAME fitness_test COMMAND fitness_test)
+set_tests_properties(fitness_test PROPERTIES LABELS gpu TIMEOUT 60)
+
+add_executable(fitness_runtime_test tests/cuda/fitness_runtime_test.cu)
+target_link_libraries(fitness_runtime_test PRIVATE wordle_fitness)
+target_compile_definitions(fitness_runtime_test PRIVATE WORD_DATA_DIR="${WORD_DATA_DIR}")
+target_compile_options(fitness_runtime_test PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Wall,-Wextra>)
+add_test(NAME fitness_runtime_test COMMAND fitness_runtime_test)
+set_tests_properties(fitness_runtime_test PROPERTIES LABELS gpu TIMEOUT 120)
+
+add_executable(fitness_game_test tests/cuda/fitness_game_test.cu)
+target_link_libraries(fitness_game_test PRIVATE wordle_fitness)
+target_include_directories(fitness_game_test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+target_compile_definitions(fitness_game_test PRIVATE
+    POLICY_FIXTURE_DIR="${POLICY_FIXTURE_DIR}"
+    WORD_DATA_DIR="${WORD_DATA_DIR}"
+)
+target_compile_options(fitness_game_test PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Wall,-Wextra>)
+add_test(NAME fitness_game_test COMMAND fitness_game_test)
+set_tests_properties(fitness_game_test PROPERTIES LABELS gpu TIMEOUT 60)

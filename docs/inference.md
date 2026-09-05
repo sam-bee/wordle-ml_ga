@@ -2,7 +2,8 @@
 
 `wordle_policy` is a small CUDA static library. Its entry point is `wordle_ga::model::Forward` in
 [`src/model/policy.hpp`](../src/model/policy.hpp). It evaluates one model on one already-encoded state and produces
-4,739 raw FP32 action logits. All network calculations run on the GPU.
+4,739 raw FP32 action logits. `ForwardBatch` evaluates multiple model/state pairs with the same kernels. All network
+calculations run on the GPU.
 
 ## Architecture
 
@@ -52,9 +53,14 @@ Reuse weights and scratch across successive calls on the same stream. Concurrent
 and inputs but require separate workspaces and outputs. Scratch needs no initialization. The future fitness
 evaluator can produce inputs and consume logits in device memory without a host round trip.
 
-This first implementation uses one 128-thread block per dense output row and FP32 arithmetic. It has no population
-batching or performance claim yet. Candidate filtering/statistic construction, action selection, gameplay, and fitness
-scoring are subsequent work. No CPU inference implementation or general model-file loader is included.
+`ForwardBatch` takes a device array of weight pointers, contiguous input/workspace arrays, and a contiguous
+`count * 4739` output array. Count must be 1 through 65,535. An optional device `int` activity array skips cases whose
+entry is zero; those cases leave scratch/output untouched and may have null weight pointers. Active cases must
+have valid inputs and live, immutable weights. The same stream/lifetime contract applies as for `Forward`.
+
+The implementation uses one 128-thread block per dense output row and FP32 arithmetic. The
+[fitness evaluator](fitness.md) supplies candidate filtering, statistics, action selection, and game scoring.
+No CPU inference implementation or general model-file loader is included.
 
 ## Verification
 
