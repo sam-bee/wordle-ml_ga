@@ -1,8 +1,7 @@
 # Instructions to Coding Agents for Neuroevolutionary Wordle
 
 Adapted from `../../../../../ai/neuroevolution-wordle/codebase/docs/AGENTS.md`, with the container and GPU guidance
-from `../../talks/wordle/wordle-ml_machine-learning/AGENTS.md`. This project retains the original GA project's
-feature-branch workflow.
+from `../../talks/wordle/wordle-ml_machine-learning/AGENTS.md`. The user's current branch preference is recorded below.
 
 ## Project and References
 
@@ -18,8 +17,8 @@ architecture will differ from the original GA. Do not assume its implementation 
 
 There must be no merge commits. Use rebase pulls and fast-forward merges to keep history linear.
 
-By default, develop new features on a new branch. Commit and push completed work to that branch unless told
-otherwise; multiple commits for a task are fine. Merge into `master` when the user requests or approves it, using
+Work directly on `master` for now. Use a feature branch only when requested by the user. Commit and push completed
+work unless told otherwise; multiple commits for a task are fine. When merging an existing branch, use
 `git merge --ff-only`. Clean up old feature branches when appropriate after merging.
 
 When both GitHub and GitLab remotes are configured, keep the corresponding branches in sync on both. If a rebase
@@ -59,6 +58,10 @@ Keep changes within the requested scope. Work incrementally; do not try to imple
 Use clear names and useful comments. Prefer idiomatic CUDA and straightforward project structure. Tests should
 verify meaningful behavior. GPU code is tested on the GPU; do not maintain a parallel host implementation just for
 testing or support machines without CUDA.
+
+Host code may manage files, CUDA resources, kernel launches, and test comparisons. It must not duplicate inference,
+gameplay, or fitness calculations as a CPU fallback or reference implementation. Use fixed reference outputs to
+validate the CUDA implementation.
 
 Wordle has five-letter words and six turns. These are fixed rules, not configuration options. Avoid flexibility and
 abstractions for requirements we do not have.

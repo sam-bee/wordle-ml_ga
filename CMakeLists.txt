@@ -15,6 +15,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 enable_testing()
 
+find_package(CUDAToolkit REQUIRED)
+
+add_library(wordle_policy STATIC src/model/policy.cu)
+target_include_directories(wordle_policy PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(wordle_policy PUBLIC CUDA::cudart)
+target_compile_options(wordle_policy PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Wall,-Wextra>)
+
 add_executable(gpu_smoke_test tests/cuda/gpu_smoke_test.cu)
 target_compile_options(gpu_smoke_test PRIVATE
     $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Wall,-Wextra>
@@ -22,3 +29,12 @@ target_compile_options(gpu_smoke_test PRIVATE
 
 add_test(NAME gpu_smoke_test COMMAND gpu_smoke_test)
 set_tests_properties(gpu_smoke_test PROPERTIES LABELS gpu TIMEOUT 30)
+
+include(tests/policy_fixtures.cmake)
+add_executable(policy_test tests/cuda/policy_test.cu)
+target_link_libraries(policy_test PRIVATE wordle_policy)
+target_include_directories(policy_test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+target_compile_definitions(policy_test PRIVATE POLICY_FIXTURE_DIR="${POLICY_FIXTURE_DIR}")
+target_compile_options(policy_test PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Wall,-Wextra>)
+add_test(NAME policy_test COMMAND policy_test)
+set_tests_properties(policy_test PROPERTIES LABELS gpu TIMEOUT 30)

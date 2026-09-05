@@ -1,46 +1,13 @@
-#include <cuda_runtime.h>
-
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include "test_support.hpp"
 
 namespace {
-
-void CheckCuda(cudaError_t status, const char *operation) {
-    if (status != cudaSuccess) {
-        std::fprintf(stderr, "%s failed: %s\n", operation, cudaGetErrorString(status));
-        std::exit(EXIT_FAILURE);
-    }
-}
-
-bool IsApprovedGpu(const char *name) {
-    return std::strcmp(name, "NVIDIA GeForce RTX 5070 Ti") == 0 || std::strcmp(name, "NVIDIA GeForce RTX 5050") == 0 ||
-           std::strcmp(name, "NVIDIA GeForce RTX 5050 Laptop GPU") == 0;
-}
 
 __global__ void AddOne(int *value) { *value += 1; }
 
 } // namespace
 
 int main() {
-    int device_count = 0;
-    CheckCuda(cudaGetDeviceCount(&device_count), "cudaGetDeviceCount");
-    if (device_count != 1) {
-        std::fprintf(stderr, "Expected exactly one visible GPU, found %d. Check NVIDIA_GPU_DEVICE_ID in .env.\n",
-                     device_count);
-        return EXIT_FAILURE;
-    }
-
-    cudaDeviceProp properties{};
-    CheckCuda(cudaGetDeviceProperties(&properties, 0), "cudaGetDeviceProperties");
-    if (!IsApprovedGpu(properties.name) || properties.major != 12 || properties.minor != 0) {
-        std::fprintf(stderr, "Expected an RTX 5070 Ti or RTX 5050 with compute capability 12.0, found %s (%d.%d).\n",
-                     properties.name, properties.major, properties.minor);
-        return EXIT_FAILURE;
-    }
-
-    // Validate the device before creating a context or allocating GPU memory.
-    CheckCuda(cudaSetDevice(0), "cudaSetDevice");
+    const auto properties = SelectTestGpu();
 
     int result = 41;
     int *device_value = nullptr;

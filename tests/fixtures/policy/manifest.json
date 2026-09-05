@@ -1,0 +1,145 @@
+{
+  "format": "wordle-cuda-f32-v1",
+  "endianness": "little",
+  "dtype": "float32",
+  "run_id": "seed-replication-20260809-132505Z",
+  "checkpoint": "best",
+  "checkpoint_update": 2600,
+  "training_commit": "2718164bb80460757592b90aa86b96eb6d596018",
+  "num_solutions": 2309,
+  "num_actions": 4739,
+  "candidate_stats_size": 209,
+  "num_turns": 6,
+  "trunk_size": 160,
+  "parameter_count": 1046596,
+  "weights_file": "weights.f32le",
+  "weights_sha256": "b78dc980505998d9dd40551ef4d24788b8378be63e4d09fb90aa0a8be83c870d",
+  "solution_vocabulary_sha256": "66d2f19d4543833517c79aafa44a6582251c21618157bffcd9e453daf405d4ff",
+  "action_vocabulary_sha256": "992239bab3de16bf51dcca2bc10efe5f81c6d92e01f00172f96574518807f4eb",
+  "tensors": [
+    {
+      "name": "candidate_projection.weight",
+      "shape": [
+        96,
+        2309
+      ],
+      "offset": 0,
+      "count": 221664,
+      "source_name": "var:/wordle_policy/candidate_projection/dense/weights"
+    },
+    {
+      "name": "candidate_projection.bias",
+      "shape": [
+        96
+      ],
+      "offset": 221664,
+      "count": 96,
+      "source_name": "var:/wordle_policy/candidate_projection/dense/biases"
+    },
+    {
+      "name": "stats_projection.weight",
+      "shape": [
+        48,
+        209
+      ],
+      "offset": 221760,
+      "count": 10032,
+      "source_name": "var:/wordle_policy/stats_projection/dense/weights"
+    },
+    {
+      "name": "stats_projection.bias",
+      "shape": [
+        48
+      ],
+      "offset": 231792,
+      "count": 48,
+      "source_name": "var:/wordle_policy/stats_projection/dense/biases"
+    },
+    {
+      "name": "turn_embedding",
+      "shape": [
+        6,
+        16
+      ],
+      "offset": 231840,
+      "count": 96,
+      "source_name": "var:/wordle_policy/turn_embedding/embeddings"
+    },
+    {
+      "name": "residual_in.weight",
+      "shape": [
+        160,
+        160
+      ],
+      "offset": 231936,
+      "count": 25600,
+      "source_name": "var:/wordle_policy/residual_in/dense/weights"
+    },
+    {
+      "name": "residual_in.bias",
+      "shape": [
+        160
+      ],
+      "offset": 257536,
+      "count": 160,
+      "source_name": "var:/wordle_policy/residual_in/dense/biases"
+    },
+    {
+      "name": "residual_out.weight",
+      "shape": [
+        160,
+        160
+      ],
+      "offset": 257696,
+      "count": 25600,
+      "source_name": "var:/wordle_policy/residual_out/dense/weights"
+    },
+    {
+      "name": "residual_out.bias",
+      "shape": [
+        160
+      ],
+      "offset": 283296,
+      "count": 160,
+      "source_name": "var:/wordle_policy/residual_out/dense/biases"
+    },
+    {
+      "name": "base_logits.weight",
+      "shape": [
+        4739,
+        160
+      ],
+      "offset": 283456,
+      "count": 758240,
+      "source_name": "var:/wordle_policy/base_logits/dense/weights"
+    },
+    {
+      "name": "base_logits.bias",
+      "shape": [
+        4739
+      ],
+      "offset": 1041696,
+      "count": 4739,
+      "source_name": "var:/wordle_policy/base_logits/dense/biases"
+    },
+    {
+      "name": "candidate_bonus.weight",
+      "shape": [
+        1,
+        160
+      ],
+      "offset": 1046435,
+      "count": 160,
+      "source_name": "var:/wordle_policy/candidate_bonus/dense/weights"
+    },
+    {
+      "name": "candidate_bonus.bias",
+      "shape": [
+        1
+      ],
+      "offset": 1046595,
+      "count": 1,
+      "source_name": "var:/wordle_policy/candidate_bonus/dense/biases"
+    }
+  ]
+}

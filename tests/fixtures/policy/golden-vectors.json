@@ -1,0 +1,1428 @@
+{
+  "format": "wordle-cuda-golden-v1",
+  "endianness": "little",
+  "dtype": "float32",
+  "values_file": "golden-vectors.f32le",
+  "values_sha256": "3c01bb0509a4894592d9250f32de3497518636bf229489548006de4511d3c826",
+  "values_count": 535520,
+  "vectors": [
+    {
+      "id": "validation-000-turn-0",
+      "turn": 0,
+      "candidate_mask": {
+        "offset_floats": 0,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 2309,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 2518,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 7257,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 11996,
+        "count": 4739
+      },
+      "raw_top_action_id": 159,
+      "selected_action_id": 159,
+      "top_two_margin": 8.012388,
+      "provenance": {
+        "solution": "ADEPT",
+        "turn": 0,
+        "candidate_count": 2309,
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 2309,
+        "shortlist_size_after": 10
+      }
+    },
+    {
+      "id": "validation-001-turn-0",
+      "turn": 0,
+      "candidate_mask": {
+        "offset_floats": 16735,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 19044,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 19253,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 23992,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 28731,
+        "count": 4739
+      },
+      "raw_top_action_id": 159,
+      "selected_action_id": 159,
+      "top_two_margin": 8.012388,
+      "provenance": {
+        "solution": "ADOBE",
+        "turn": 0,
+        "candidate_count": 2309,
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 2309,
+        "shortlist_size_after": 20
+      }
+    },
+    {
+      "id": "validation-000-turn-1",
+      "turn": 1,
+      "candidate_mask": {
+        "offset_floats": 33470,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 35779,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 35988,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 40727,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 45466,
+        "count": 4739
+      },
+      "raw_top_action_id": 10,
+      "selected_action_id": 10,
+      "top_two_margin": 1.3527946,
+      "provenance": {
+        "solution": "ADEPT",
+        "turn": 1,
+        "candidate_count": 10,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "G---Y"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 10,
+        "shortlist_size_after": 1
+      }
+    },
+    {
+      "id": "validation-000-turn-2",
+      "turn": 2,
+      "candidate_mask": {
+        "offset_floats": 50205,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 52514,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 52723,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 57462,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 62201,
+        "count": 4739
+      },
+      "raw_top_action_id": 35,
+      "selected_action_id": 35,
+      "top_two_margin": 13.269228,
+      "provenance": {
+        "solution": "ADEPT",
+        "turn": 2,
+        "candidate_count": 1,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "G---Y"
+          },
+          {
+            "guess": "ABLED",
+            "feedback": "G--YY"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 1,
+        "shortlist_size_after": 1
+      }
+    },
+    {
+      "id": "validation-001-turn-3",
+      "turn": 3,
+      "candidate_mask": {
+        "offset_floats": 66940,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 69249,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 69458,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 74197,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 78936,
+        "count": 4739
+      },
+      "raw_top_action_id": 40,
+      "selected_action_id": 40,
+      "top_two_margin": 29.927494,
+      "provenance": {
+        "solution": "ADOBE",
+        "turn": 3,
+        "candidate_count": 1,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "G---G"
+          },
+          {
+            "guess": "BLOGS",
+            "feedback": "Y-G--"
+          },
+          {
+            "guess": "ABODE",
+            "feedback": "GYGYG"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 1,
+        "shortlist_size_after": 1
+      }
+    },
+    {
+      "id": "validation-007-turn-4",
+      "turn": 4,
+      "candidate_mask": {
+        "offset_floats": 83675,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 85984,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 86193,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 90932,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 95671,
+        "count": 4739
+      },
+      "raw_top_action_id": 221,
+      "selected_action_id": 221,
+      "top_two_margin": 13.075642,
+      "provenance": {
+        "solution": "BAGEL",
+        "turn": 4,
+        "candidate_count": 1,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "Y---Y"
+          },
+          {
+            "guess": "METAL",
+            "feedback": "-Y-YG"
+          },
+          {
+            "guess": "APING",
+            "feedback": "Y---Y"
+          },
+          {
+            "guess": "GAVEL",
+            "feedback": "YG-GG"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 1,
+        "shortlist_size_after": 1
+      }
+    },
+    {
+      "id": "validation-048-turn-5",
+      "turn": 5,
+      "candidate_mask": {
+        "offset_floats": 100410,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 102719,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 102928,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 107667,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 112406,
+        "count": 4739
+      },
+      "raw_top_action_id": 206,
+      "selected_action_id": 3,
+      "top_two_margin": 0.8511257,
+      "provenance": {
+        "solution": "HIPPY",
+        "turn": 5,
+        "candidate_count": 1,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "--Y--"
+          },
+          {
+            "guess": "UNTIL",
+            "feedback": "---Y-"
+          },
+          {
+            "guess": "DIPPY",
+            "feedback": "-GGGG"
+          },
+          {
+            "guess": "AWASH",
+            "feedback": "----Y"
+          },
+          {
+            "guess": "AARGH",
+            "feedback": "----Y"
+          }
+        ],
+        "raw_top_was_available": false,
+        "selected_was_candidate": false,
+        "selection_kind": "probe",
+        "shortlist_size_before": 1,
+        "shortlist_size_after": 1
+      }
+    },
+    {
+      "id": "validation-002-turn-0",
+      "turn": 0,
+      "candidate_mask": {
+        "offset_floats": 117145,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 119454,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 119663,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 124402,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 129141,
+        "count": 4739
+      },
+      "raw_top_action_id": 159,
+      "selected_action_id": 159,
+      "top_two_margin": 8.012388,
+      "provenance": {
+        "solution": "ALARM",
+        "turn": 0,
+        "candidate_count": 2309,
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 2309,
+        "shortlist_size_after": 13
+      }
+    },
+    {
+      "id": "validation-001-turn-1",
+      "turn": 1,
+      "candidate_mask": {
+        "offset_floats": 133880,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 136189,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 136398,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 141137,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 145876,
+        "count": 4739
+      },
+      "raw_top_action_id": 400,
+      "selected_action_id": 400,
+      "top_two_margin": 3.1611784,
+      "provenance": {
+        "solution": "ADOBE",
+        "turn": 1,
+        "candidate_count": 20,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "G---G"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": false,
+        "selection_kind": "probe",
+        "shortlist_size_before": 20,
+        "shortlist_size_after": 3
+      }
+    },
+    {
+      "id": "validation-001-turn-2",
+      "turn": 2,
+      "candidate_mask": {
+        "offset_floats": 150615,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 152924,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 153133,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 157872,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 162611,
+        "count": 4739
+      },
+      "raw_top_action_id": 11,
+      "selected_action_id": 11,
+      "top_two_margin": 2.267498,
+      "provenance": {
+        "solution": "ADOBE",
+        "turn": 2,
+        "candidate_count": 3,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "G---G"
+          },
+          {
+            "guess": "BLOGS",
+            "feedback": "Y-G--"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 3,
+        "shortlist_size_after": 1
+      }
+    },
+    {
+      "id": "validation-002-turn-2",
+      "turn": 2,
+      "candidate_mask": {
+        "offset_floats": 167350,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 169659,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 169868,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 174607,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 179346,
+        "count": 4739
+      },
+      "raw_top_action_id": 73,
+      "selected_action_id": 73,
+      "top_two_margin": 3.350398,
+      "provenance": {
+        "solution": "ALARM",
+        "turn": 2,
+        "candidate_count": 2,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "GY---"
+          },
+          {
+            "guess": "BEGOT",
+            "feedback": "-----"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 2,
+        "shortlist_size_after": 1
+      }
+    },
+    {
+      "id": "validation-002-turn-1",
+      "turn": 1,
+      "candidate_mask": {
+        "offset_floats": 184085,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 186394,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 186603,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 191342,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 196081,
+        "count": 4739
+      },
+      "raw_top_action_id": 310,
+      "selected_action_id": 310,
+      "top_two_margin": 1.1400967,
+      "provenance": {
+        "solution": "ALARM",
+        "turn": 1,
+        "candidate_count": 13,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "GY---"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": false,
+        "selection_kind": "probe",
+        "shortlist_size_before": 13,
+        "shortlist_size_after": 2
+      }
+    },
+    {
+      "id": "validation-003-turn-0",
+      "turn": 0,
+      "candidate_mask": {
+        "offset_floats": 200820,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 203129,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 203338,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 208077,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 212816,
+        "count": 4739
+      },
+      "raw_top_action_id": 159,
+      "selected_action_id": 159,
+      "top_two_margin": 8.012388,
+      "provenance": {
+        "solution": "ALOUD",
+        "turn": 0,
+        "candidate_count": 2309,
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 2309,
+        "shortlist_size_after": 29
+      }
+    },
+    {
+      "id": "validation-003-turn-1",
+      "turn": 1,
+      "candidate_mask": {
+        "offset_floats": 217555,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 219864,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 220073,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 224812,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 229551,
+        "count": 4739
+      },
+      "raw_top_action_id": 798,
+      "selected_action_id": 798,
+      "top_two_margin": 1.799479,
+      "provenance": {
+        "solution": "ALOUD",
+        "turn": 1,
+        "candidate_count": 29,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "G----"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": false,
+        "selection_kind": "probe",
+        "shortlist_size_before": 29,
+        "shortlist_size_after": 1
+      }
+    },
+    {
+      "id": "validation-003-turn-2",
+      "turn": 2,
+      "candidate_mask": {
+        "offset_floats": 234290,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 236599,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 236808,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 241547,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 246286,
+        "count": 4739
+      },
+      "raw_top_action_id": 98,
+      "selected_action_id": 98,
+      "top_two_margin": 12.649185,
+      "provenance": {
+        "solution": "ALOUD",
+        "turn": 2,
+        "candidate_count": 1,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "G----"
+          },
+          {
+            "guess": "CLOUT",
+            "feedback": "-GGG-"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 1,
+        "shortlist_size_after": 1
+      }
+    },
+    {
+      "id": "validation-004-turn-0",
+      "turn": 0,
+      "candidate_mask": {
+        "offset_floats": 251025,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 253334,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 253543,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 258282,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 263021,
+        "count": 4739
+      },
+      "raw_top_action_id": 159,
+      "selected_action_id": 159,
+      "top_two_margin": 8.012388,
+      "provenance": {
+        "solution": "AMISS",
+        "turn": 0,
+        "candidate_count": 2309,
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 2309,
+        "shortlist_size_after": 1
+      }
+    },
+    {
+      "id": "validation-004-turn-1",
+      "turn": 1,
+      "candidate_mask": {
+        "offset_floats": 267760,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 270069,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 270278,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 275017,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 279756,
+        "count": 4739
+      },
+      "raw_top_action_id": 114,
+      "selected_action_id": 114,
+      "top_two_margin": 14.174973,
+      "provenance": {
+        "solution": "AMISS",
+        "turn": 1,
+        "candidate_count": 1,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "G-GG-"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 1,
+        "shortlist_size_after": 1
+      }
+    },
+    {
+      "id": "validation-005-turn-0",
+      "turn": 0,
+      "candidate_mask": {
+        "offset_floats": 284495,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 286804,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 287013,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 291752,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 296491,
+        "count": 4739
+      },
+      "raw_top_action_id": 159,
+      "selected_action_id": 159,
+      "top_two_margin": 8.012388,
+      "provenance": {
+        "solution": "AVAIL",
+        "turn": 0,
+        "candidate_count": 2309,
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 2309,
+        "shortlist_size_after": 13
+      }
+    },
+    {
+      "id": "validation-005-turn-1",
+      "turn": 1,
+      "candidate_mask": {
+        "offset_floats": 301230,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 303539,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 303748,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 308487,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 313226,
+        "count": 4739
+      },
+      "raw_top_action_id": 618,
+      "selected_action_id": 618,
+      "top_two_margin": 0.22467136,
+      "provenance": {
+        "solution": "AVAIL",
+        "turn": 1,
+        "candidate_count": 13,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "G-Y--"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": false,
+        "selection_kind": "probe",
+        "shortlist_size_before": 13,
+        "shortlist_size_after": 1
+      }
+    },
+    {
+      "id": "validation-005-turn-2",
+      "turn": 2,
+      "candidate_mask": {
+        "offset_floats": 317965,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 320274,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 320483,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 325222,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 329961,
+        "count": 4739
+      },
+      "raw_top_action_id": 197,
+      "selected_action_id": 197,
+      "top_two_margin": 7.264757,
+      "provenance": {
+        "solution": "AVAIL",
+        "turn": 2,
+        "candidate_count": 1,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "G-Y--"
+          },
+          {
+            "guess": "CANAL",
+            "feedback": "-Y-YG"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 1,
+        "shortlist_size_after": 1
+      }
+    },
+    {
+      "id": "validation-006-turn-0",
+      "turn": 0,
+      "candidate_mask": {
+        "offset_floats": 334700,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 337009,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 337218,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 341957,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 346696,
+        "count": 4739
+      },
+      "raw_top_action_id": 159,
+      "selected_action_id": 159,
+      "top_two_margin": 8.012388,
+      "provenance": {
+        "solution": "BADGE",
+        "turn": 0,
+        "candidate_count": 2309,
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 2309,
+        "shortlist_size_after": 47
+      }
+    },
+    {
+      "id": "validation-006-turn-1",
+      "turn": 1,
+      "candidate_mask": {
+        "offset_floats": 351435,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 353744,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 353953,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 358692,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 363431,
+        "count": 4739
+      },
+      "raw_top_action_id": 594,
+      "selected_action_id": 594,
+      "top_two_margin": 3.7318277,
+      "provenance": {
+        "solution": "BADGE",
+        "turn": 1,
+        "candidate_count": 47,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "Y---G"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 47,
+        "shortlist_size_after": 3
+      }
+    },
+    {
+      "id": "validation-006-turn-2",
+      "turn": 2,
+      "candidate_mask": {
+        "offset_floats": 368170,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 370479,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 370688,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 375427,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 380166,
+        "count": 4739
+      },
+      "raw_top_action_id": 218,
+      "selected_action_id": 218,
+      "top_two_margin": 1.7472277,
+      "provenance": {
+        "solution": "BADGE",
+        "turn": 2,
+        "candidate_count": 3,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "Y---G"
+          },
+          {
+            "guess": "CABLE",
+            "feedback": "-GY-G"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 3,
+        "shortlist_size_after": 1
+      }
+    },
+    {
+      "id": "validation-007-turn-0",
+      "turn": 0,
+      "candidate_mask": {
+        "offset_floats": 384905,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 387214,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 387423,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 392162,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 396901,
+        "count": 4739
+      },
+      "raw_top_action_id": 159,
+      "selected_action_id": 159,
+      "top_two_margin": 8.012388,
+      "provenance": {
+        "solution": "BAGEL",
+        "turn": 0,
+        "candidate_count": 2309,
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 2309,
+        "shortlist_size_after": 79
+      }
+    },
+    {
+      "id": "validation-007-turn-1",
+      "turn": 1,
+      "candidate_mask": {
+        "offset_floats": 401640,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 403949,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 404158,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 408897,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 413636,
+        "count": 4739
+      },
+      "raw_top_action_id": 2537,
+      "selected_action_id": 2537,
+      "top_two_margin": 2.9478865,
+      "provenance": {
+        "solution": "BAGEL",
+        "turn": 1,
+        "candidate_count": 79,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "Y---Y"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 79,
+        "shortlist_size_after": 7
+      }
+    },
+    {
+      "id": "validation-007-turn-2",
+      "turn": 2,
+      "candidate_mask": {
+        "offset_floats": 418375,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 420684,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 420893,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 425632,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 430371,
+        "count": 4739
+      },
+      "raw_top_action_id": 143,
+      "selected_action_id": 143,
+      "top_two_margin": 0.4214785,
+      "provenance": {
+        "solution": "BAGEL",
+        "turn": 2,
+        "candidate_count": 7,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "Y---Y"
+          },
+          {
+            "guess": "METAL",
+            "feedback": "-Y-YG"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": false,
+        "selection_kind": "probe",
+        "shortlist_size_before": 7,
+        "shortlist_size_after": 2
+      }
+    },
+    {
+      "id": "validation-007-turn-3",
+      "turn": 3,
+      "candidate_mask": {
+        "offset_floats": 435110,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 437419,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 437628,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 442367,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 447106,
+        "count": 4739
+      },
+      "raw_top_action_id": 1634,
+      "selected_action_id": 1634,
+      "top_two_margin": 0.6474371,
+      "provenance": {
+        "solution": "BAGEL",
+        "turn": 3,
+        "candidate_count": 2,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "Y---Y"
+          },
+          {
+            "guess": "METAL",
+            "feedback": "-Y-YG"
+          },
+          {
+            "guess": "APING",
+            "feedback": "Y---Y"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 2,
+        "shortlist_size_after": 1
+      }
+    },
+    {
+      "id": "validation-008-turn-0",
+      "turn": 0,
+      "candidate_mask": {
+        "offset_floats": 451845,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 454154,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 454363,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 459102,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 463841,
+        "count": 4739
+      },
+      "raw_top_action_id": 159,
+      "selected_action_id": 159,
+      "top_two_margin": 8.012388,
+      "provenance": {
+        "solution": "BAKER",
+        "turn": 0,
+        "candidate_count": 2309,
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 2309,
+        "shortlist_size_after": 61
+      }
+    },
+    {
+      "id": "validation-008-turn-1",
+      "turn": 1,
+      "candidate_mask": {
+        "offset_floats": 468580,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 470889,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 471098,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 475837,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 480576,
+        "count": 4739
+      },
+      "raw_top_action_id": 4373,
+      "selected_action_id": 4373,
+      "top_two_margin": 2.6269846,
+      "provenance": {
+        "solution": "BAKER",
+        "turn": 1,
+        "candidate_count": 61,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "YY--Y"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": false,
+        "selection_kind": "probe",
+        "shortlist_size_before": 61,
+        "shortlist_size_after": 13
+      }
+    },
+    {
+      "id": "validation-008-turn-2",
+      "turn": 2,
+      "candidate_mask": {
+        "offset_floats": 485315,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 487624,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 487833,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 492572,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 497311,
+        "count": 4739
+      },
+      "raw_top_action_id": 628,
+      "selected_action_id": 628,
+      "top_two_margin": 0.72478414,
+      "provenance": {
+        "solution": "BAKER",
+        "turn": 2,
+        "candidate_count": 13,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "YY--Y"
+          },
+          {
+            "guess": "TYLER",
+            "feedback": "---GG"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 13,
+        "shortlist_size_after": 9
+      }
+    },
+    {
+      "id": "validation-008-turn-3",
+      "turn": 3,
+      "candidate_mask": {
+        "offset_floats": 502050,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 504359,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 504568,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 509307,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 514046,
+        "count": 4739
+      },
+      "raw_top_action_id": 4517,
+      "selected_action_id": 4517,
+      "top_two_margin": 0.645277,
+      "provenance": {
+        "solution": "BAKER",
+        "turn": 3,
+        "candidate_count": 9,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "YY--Y"
+          },
+          {
+            "guess": "TYLER",
+            "feedback": "---GG"
+          },
+          {
+            "guess": "CAPER",
+            "feedback": "-G-GG"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 9,
+        "shortlist_size_after": 3
+      }
+    },
+    {
+      "id": "validation-008-turn-4",
+      "turn": 4,
+      "candidate_mask": {
+        "offset_floats": 518785,
+        "count": 2309
+      },
+      "candidate_stats": {
+        "offset_floats": 521094,
+        "count": 209
+      },
+      "remaining_action_mask": {
+        "offset_floats": 521303,
+        "count": 4739
+      },
+      "available_action_mask": {
+        "offset_floats": 526042,
+        "count": 4739
+      },
+      "raw_logits": {
+        "offset_floats": 530781,
+        "count": 4739
+      },
+      "raw_top_action_id": 227,
+      "selected_action_id": 227,
+      "top_two_margin": 5.321863,
+      "provenance": {
+        "solution": "BAKER",
+        "turn": 4,
+        "candidate_count": 3,
+        "history": [
+          {
+            "guess": "ARISE",
+            "feedback": "YY--Y"
+          },
+          {
+            "guess": "TYLER",
+            "feedback": "---GG"
+          },
+          {
+            "guess": "CAPER",
+            "feedback": "-G-GG"
+          },
+          {
+            "guess": "WAGER",
+            "feedback": "-G-GG"
+          }
+        ],
+        "raw_top_was_available": true,
+        "selected_was_candidate": true,
+        "selection_kind": "candidate",
+        "shortlist_size_before": 3,
+        "shortlist_size_after": 1
+      }
+    }
+  ]
+}

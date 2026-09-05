@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help env docker-build configure build test test-gpu test-gpu-sanitized smoke \
+.PHONY: help env docker-build configure build test test-gpu test-gpu-sanitized smoke inference \
 	format clean rebuild agents-rebuild build-and-test shell
 
 CUDA_RUN := docker compose run --rm --no-deps -T cuda-dev
@@ -11,9 +11,10 @@ help:
 	@echo "  make docker-build        Build the CUDA development image"
 	@echo "  make configure           Configure CMake with Ninja for sm_120"
 	@echo "  make build               Configure and compile"
-	@echo "  make test                Build and run the GPU smoke test with CTest"
+	@echo "  make test                Build and run the GPU tests with CTest"
 	@echo "  make smoke               Build and print the GPU smoke result"
-	@echo "  make test-gpu-sanitized   Run the smoke test under compute-sanitizer"
+	@echo "  make inference           Run CUDA policy inference against saved reference cases"
+	@echo "  make test-gpu-sanitized   Run the GPU tests under compute-sanitizer"
 	@echo "  make format              Format C++ and CUDA sources"
 	@echo "  make clean               Remove the generated build directory"
 	@echo "  make rebuild             Clean, format, build, and test"
@@ -41,9 +42,13 @@ test-gpu: test
 
 test-gpu-sanitized: build
 	$(CUDA_RUN) compute-sanitizer --tool memcheck --error-exitcode=1 ./build/gpu_smoke_test
+	$(CUDA_RUN) compute-sanitizer --tool memcheck --error-exitcode=1 ./build/policy_test
 
 smoke: build
 	$(CUDA_RUN) ./build/gpu_smoke_test
+
+inference: build
+	$(CUDA_RUN) ./build/policy_test
 
 format: docker-build
 	$(CUDA_RUN) sh -c 'find src tests -type f \( -name "*.hpp" -o -name "*.cpp" -o -name "*.cu" \) -exec clang-format -i {} +'
